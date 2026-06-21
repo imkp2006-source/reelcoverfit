@@ -706,3 +706,38 @@ details p {
     width: min(100%, 280px);
   }
 }
+
+/* Fix logo size */
+.logo-img {
+  width: 42px !important;
+  height: 42px !important;
+  min-width: 42px;
+  border-radius: 12px;
+  object-fit: contain;
+  display: block;
+  box-shadow: 0 10px 25px rgba(124, 58, 237, 0.18);
+}
+
+/* Keep header compact */
+.site-header .logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.15rem;
+}
+
+.nav {
+  min-height: 72px;
+  padding: 10px 0;
+}
+
+/* Mobile heading improvement */
+@media (max-width: 600px) {
+  h1 {
+    font-size: 3rem;
+  }
+
+  .hero {
+    padding-top: 48px;
+  }
+}
