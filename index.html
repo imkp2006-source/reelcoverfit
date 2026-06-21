@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Instagram Reel Size Checker & Cover Safe Zone Tool - ReelCoverFit</title>
+  <meta
+    name="description"
+    content="Upload your Instagram Reel cover and check if your text, face, or logo fits safely before posting. Free online reel size checker by ReelCoverFit."
+  />
+  <meta name="keywords" content="Instagram reel size checker, reel cover checker, reel safe zone, instagram cover size, reel thumbnail checker" />
+  <meta name="author" content="ReelCoverFit" />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://reelcoverfit.com/" />
+
+  <meta property="og:title" content="Instagram Reel Size Checker - ReelCoverFit" />
+  <meta property="og:description" content="Check your Instagram Reel cover size and safe zones before posting." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://reelcoverfit.com/" />
+  <meta property="og:site_name" content="ReelCoverFit" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Instagram Reel Size Checker - ReelCoverFit" />
+  <meta name="twitter:description" content="Upload your reel cover and preview safe zones before posting." />
+
+  <link rel="stylesheet" href="style.css" />
+  <script defer src="script.js"></script>
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "ReelCoverFit",
+    "url": "https://reelcoverfit.com/",
+    "applicationCategory": "MultimediaApplication",
+    "operatingSystem": "Any",
+    "description": "A free browser-based Instagram Reel size checker and cover safe zone preview tool.",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    }
+  }
+  </script>
+</head>
+
+<body>
+  <header class="site-header">
+    <nav class="nav container" aria-label="Main navigation">
+      <a href="index.html" class="logo" aria-label="ReelCoverFit home">
+        <span class="logo-mark">R</span>
+        <span>ReelCoverFit</span>
+      </a>
+
+      <div class="nav-links">
+        <a href="#tool">Tool</a>
+        <a href="#guide">Guide</a>
+        <a href="#faq">FAQ</a>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero section">
+      <div class="container hero-grid">
+        <div class="hero-content">
+          <p class="eyebrow">Free browser-based tool</p>
+          <h1>Instagram Reel Size Checker</h1>
+          <p class="hero-text">
+            Upload your reel cover and check if your text, face, or logo fits safely inside a 9:16 Reel preview before posting.
+          </p>
+
+          <div class="hero-actions">
+            <a href="#tool" class="btn btn-primary">Check Reel Cover</a>
+            <a href="#guide" class="btn btn-secondary">View Size Guide</a>
+          </div>
+
+          <p class="privacy-pill">
+            🔒 Your image stays in your browser. Nothing is uploaded.
+          </p>
+        </div>
+
+        <div class="hero-card" aria-label="Reel cover preview example">
+          <div class="mock-phone">
+            <div class="mock-safe-zone">
+              <span>Safe Zone</span>
+            </div>
+            <div class="mock-ui top"></div>
+            <div class="mock-ui bottom"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="tool" class="section tool-section">
+      <div class="container">
+        <div class="section-heading">
+          <p class="eyebrow">Upload and preview</p>
+          <h2>Check your Reel cover fit</h2>
+          <p>
+            Best for checking vertical reel covers, thumbnails, text placement, and safe zones.
+          </p>
+        </div>
+
+        <div class="tool-layout">
+          <div class="upload-panel card">
+            <h3>Upload image</h3>
+            <p class="small-text">
+              Supported: JPG, PNG, WebP, GIF. Max file size: 10 MB.
+            </p>
+
+            <div
+              id="dropZone"
+              class="drop-zone"
+              role="button"
+              tabindex="0"
+              aria-label="Upload reel cover image"
+            >
+              <input
+                type="file"
+                id="imageInput"
+                accept="image/*"
+                aria-label="Choose reel cover image"
+              />
+              <div class="drop-icon">⬆</div>
+              <strong>Click to upload</strong>
+              <span>or drag and drop your image here</span>
+            </div>
+
+            <p class="privacy-note">
+              Your image is processed only inside your browser. It is not uploaded to any server.
+            </p>
+
+            <div id="statusMessage" class="status-message" role="status">
+              Upload an image to start checking.
+            </div>
+
+            <div class="result-box">
+              <div>
+                <span class="result-label">Image size</span>
+                <strong id="dimensionResult">Not uploaded</strong>
+              </div>
+              <div>
+                <span class="result-label">9:16 check</span>
+                <strong id="ratioResult">Waiting</strong>
+              </div>
+            </div>
+
+            <p id="recommendationText" class="recommendation">
+              Tip: Keep important text, face, and logo away from the top and bottom edges.
+            </p>
+
+            <div class="button-group">
+              <button id="toggleSafeBtn" class="btn btn-secondary" type="button" disabled>
+                Hide Safe Zone
+              </button>
+              <button id="toggleGridBtn" class="btn btn-secondary" type="button" disabled>
+                Hide Grid Preview
+              </button>
+              <button id="downloadBtn" class="btn btn-primary" type="button" disabled>
+                Download Preview
+              </button>
+              <button id="resetBtn" class="btn btn-danger" type="button" disabled>
+                Reset
+              </button>
+            </div>
+          </div>
+
+          <div class="preview-panel">
+            <div class="card">
+              <div class="preview-header">
+                <h3>9:16 Reel preview</h3>
+                <span class="tag">1080 × 1920</span>
+              </div>
+
+              <div class="canvas-wrap">
+                <canvas
+                  id="reelCanvas"
+                  width="1080"
+                  height="1920"
+                  aria-label="Reel cover preview canvas"
+                ></canvas>
+                <div id="emptyPreview" class="empty-preview">
+                  Your preview will appear here
+                </div>
+              </div>
+            </div>
+
+            <div id="gridPreviewCard" class="card grid-preview-card">
+              <div class="preview-header">
+                <h3>Profile grid crop preview</h3>
+                <span class="tag">1:1 center crop</span>
+              </div>
+
+              <div class="grid-canvas-wrap">
+                <canvas
+                  id="gridCanvas"
+                  width="800"
+                  height="800"
+                  aria-label="Profile grid crop preview canvas"
+                ></canvas>
+                <div id="emptyGridPreview" class="empty-preview small">
+                  Upload an image to view grid crop
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section how-section">
+      <div class="container">
+        <div class="section-heading">
+          <p class="eyebrow">Simple process</p>
+          <h2>How it works</h2>
+        </div>
+
+        <div class="steps-grid">
+          <article class="step-card">
+            <span>1</span>
+            <h3>Upload</h3>
+            <p>Select your Reel cover image from your device.</p>
+          </article>
+
+          <article class="step-card">
+            <span>2</span>
+            <h3>Check size</h3>
+            <p>See your image dimensions and whether it is close to 9:16.</p>
+          </article>
+
+          <article class="step-card">
+            <span>3</span>
+            <h3>Preview</h3>
+            <p>View safe zones and profile grid crop before posting.</p>
+          </article>
+
+          <article class="step-card">
+            <span>4</span>
+            <h3>Download</h3>
+            <p>Download a checked preview image for reference.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="guide" class="section guide-section">
+      <div class="container guide-grid">
+        <div>
+          <p class="eyebrow">Recommended format</p>
+          <h2>Instagram Reel cover size guide</h2>
+          <p>
+            A vertical <strong>9:16</strong> image works best for Reel covers. A common high-quality size is
+            <strong>1080 × 1920 pixels</strong>.
+          </p>
+          <p>
+            Keep your important text, face, and logo near the center area. Top and bottom areas can be affected by app interface elements, captions, or preview crops.
+          </p>
+        </div>
+
+        <div class="size-card card">
+          <h3>Quick recommendation</h3>
+          <ul class="check-list">
+            <li>Use vertical 9:16 format</li>
+            <li>Prefer 1080 × 1920 px</li>
+            <li>Keep text inside the safe zone</li>
+            <li>Check profile grid crop before posting</li>
+            <li>Avoid placing logos at extreme edges</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="section safe-zone-section">
+      <div class="container">
+        <div class="section-heading">
+          <p class="eyebrow">Placement matters</p>
+          <h2>Safe zone guide</h2>
+          <p>
+            ReelCoverFit highlights practical unsafe areas so you can avoid placing important elements too close to the edges.
+          </p>
+        </div>
+
+        <div class="info-grid">
+          <article class="info-card">
+            <h3>Top area</h3>
+            <p>Avoid placing important text very close to the top because it may feel cramped in previews.</p>
+          </article>
+
+          <article class="info-card">
+            <h3>Bottom area</h3>
+            <p>Captions, buttons, or interface elements can make bottom text harder to read.</p>
+          </article>
+
+          <article class="info-card">
+            <h3>Center area</h3>
+            <p>The center is usually safest for faces, titles, and logos.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="faq" class="section faq-section">
+      <div class="container">
+        <div class="section-heading">
+          <p class="eyebrow">Questions</p>
+          <h2>FAQ</h2>
+        </div>
+
+        <div class="faq-list">
+          <details>
+            <summary>What is the best Instagram Reel cover size?</summary>
+            <p>A 9:16 vertical image is recommended. A commonly used size is 1080 × 1920 pixels.</p>
+          </details>
+
+          <details>
+            <summary>Does ReelCoverFit upload my image?</summary>
+            <p>No. Your image is processed locally inside your browser. It is not sent to any server.</p>
+          </details>
+
+          <details>
+            <summary>Why does my Reel cover get cropped?</summary>
+            <p>Your cover can appear differently in the Reel view, profile grid, and previews. That is why checking safe zones helps.</p>
+          </details>
+
+          <details>
+            <summary>Can I use this for YouTube Shorts covers?</summary>
+            <p>You can use the 9:16 preview as a rough check, but this tool is currently focused on Instagram Reel covers.</p>
+          </details>
+
+          <details>
+            <summary>Is ReelCoverFit official?</summary>
+            <p>No. ReelCoverFit is an unofficial tool and is not affiliated with Instagram, Meta, or any social media platform.</p>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <section class="section feedback-section">
+      <div class="container">
+        <div class="feedback-card">
+          <h2>Help improve ReelCoverFit</h2>
+          <p>
+            Tried the tool? Share what worked, what failed, and what feature you want next.
+          </p>
+          <a
+            class="btn btn-primary"
+            href="https://docs.google.com/forms/d/e/1FAIpQLSfT5VczsnB0pcrvcuKh632DZWmeEdgrW7jQjnUT6kgMmyT8yw/viewform?usp=publish-editor"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Give Feedback
+          </a>
+          <p class="small-text">
+            Replace this link with your own Google Form later.
+          </p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-content">
+      <div>
+        <a href="index.html" class="logo footer-logo">
+          <span class="logo-mark">R</span>
+          <span>ReelCoverFit</span>
+        </a>
+        <p>
+          ReelCoverFit is an unofficial tool and is not affiliated with Instagram, Meta, or any social media platform.
+        </p>
+      </div>
+
+      <div class="footer-links">
+        <a href="privacy.html">Privacy Policy</a>
+        <a href="terms.html">Terms</a>
+        <a href="#tool">Use Tool</a>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>
