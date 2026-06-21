@@ -805,3 +805,28 @@ details p {
     background: #0f172a;
   }
 }
+
+.seo-content-section {
+  padding-top: 40px;
+}
+
+.seo-content-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 28px;
+}
+
+.seo-content-card h2 {
+  margin-bottom: 18px;
+}
+
+.seo-content-card p {
+  color: var(--muted);
+  margin: 0 0 16px;
+}
+
+.seo-content-card p:last-child {
+  margin-bottom: 0;
+}
