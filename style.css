@@ -741,3 +741,67 @@ details p {
     padding-top: 48px;
   }
 }
+
+/* Automatic dark mode */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #020617;
+    --surface: #0f172a;
+    --surface-soft: #1e293b;
+    --text: #f8fafc;
+    --muted: #94a3b8;
+    --border: #334155;
+    --shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+  }
+
+  .site-header {
+    background: rgba(2, 6, 23, 0.9);
+  }
+
+  .privacy-pill {
+    background: rgba(15, 23, 42, 0.8);
+  }
+
+  .drop-zone {
+    background: #1e293b;
+    border-color: #475569;
+  }
+
+  .drop-zone:hover,
+  .drop-zone.drag-over,
+  .drop-zone:focus {
+    background: #2e1065;
+    border-color: var(--primary);
+  }
+
+  .drop-icon {
+    background: #0f172a;
+  }
+
+  .canvas-wrap,
+  .grid-canvas-wrap {
+    background: #020617;
+  }
+
+  .btn-secondary {
+    background: #1e293b;
+    color: var(--text);
+    border-color: #334155;
+  }
+
+  .status-message {
+    background: #1e293b;
+  }
+
+  .result-box > div {
+    background: #1e293b;
+  }
+
+  details {
+    background: #0f172a;
+  }
+
+  .site-footer {
+    background: #0f172a;
+  }
+}
