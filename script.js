@@ -19,9 +19,9 @@ const ratioResult = document.getElementById("ratioResult");
 const recommendationText = document.getElementById("recommendationText");
 
 const reelCanvas = document.getElementById("reelCanvas");
-const reelCtx = reelCanvas.getContext("2d");
+const reelCtx = reelCanvas ? reelCanvas.getContext("2d") : null;
 const gridCanvas = document.getElementById("gridCanvas");
-const gridCtx = gridCanvas.getContext("2d");
+const gridCtx = gridCanvas ? gridCanvas.getContext("2d") : null;
 
 const emptyPreview = document.getElementById("emptyPreview");
 const emptyGridPreview = document.getElementById("emptyGridPreview");
@@ -32,62 +32,117 @@ const toggleGridBtn = document.getElementById("toggleGridBtn");
 const downloadBtn = document.getElementById("downloadBtn");
 const resetBtn = document.getElementById("resetBtn");
 
-dropZone.addEventListener("click", () => imageInput.click());
-
-dropZone.addEventListener("keydown", (event) => {
-  if (event.key === "Enter" || event.key === " ") {
-    event.preventDefault();
-    imageInput.click();
+function trackEvent(eventName, eventParams = {}) {
+  if (typeof gtag === "function") {
+    gtag("event", eventName, {
+      tool_name: "reelcoverfit",
+      page_path: window.location.pathname,
+      ...eventParams
+    });
   }
-});
+}
 
-imageInput.addEventListener("change", (event) => {
-  const file = event.target.files[0];
-  if (file) handleImageFile(file);
-});
+function getFileSizeBucket(size) {
+  if (size < 500 * 1024) return "under_500kb";
+  if (size < 2 * 1024 * 1024) return "500kb_to_2mb";
+  if (size < 5 * 1024 * 1024) return "2mb_to_5mb";
+  return "5mb_to_10mb";
+}
 
-["dragenter", "dragover"].forEach((eventName) => {
-  dropZone.addEventListener(eventName, (event) => {
-    event.preventDefault();
-    dropZone.classList.add("drag-over");
+function setupClickTracking() {
+  document.querySelectorAll("[data-track]").forEach((element) => {
+    element.addEventListener("click", () => {
+      trackEvent(element.dataset.track, {
+        link_text: element.textContent.trim().slice(0, 80),
+        link_url: element.getAttribute("href") || ""
+      });
+    });
   });
-});
+}
 
-["dragleave", "drop"].forEach((eventName) => {
-  dropZone.addEventListener(eventName, (event) => {
-    event.preventDefault();
-    dropZone.classList.remove("drag-over");
+setupClickTracking();
+
+if (dropZone && imageInput) {
+  dropZone.addEventListener("click", () => imageInput.click());
+
+  dropZone.addEventListener("keydown", (event) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      imageInput.click();
+    }
   });
-});
 
-dropZone.addEventListener("drop", (event) => {
-  const file = event.dataTransfer.files[0];
-  if (file) handleImageFile(file);
-});
+  imageInput.addEventListener("change", (event) => {
+    const file = event.target.files[0];
+    if (file) handleImageFile(file, "file_picker");
+  });
 
-toggleSafeBtn.addEventListener("click", () => {
-  state.showSafeZone = !state.showSafeZone;
-  toggleSafeBtn.textContent = state.showSafeZone ? "Hide Safe Zone" : "Show Safe Zone";
-  drawReelPreview();
-});
+  ["dragenter", "dragover"].forEach((eventName) => {
+    dropZone.addEventListener(eventName, (event) => {
+      event.preventDefault();
+      dropZone.classList.add("drag-over");
+    });
+  });
 
-toggleGridBtn.addEventListener("click", () => {
-  state.showGridPreview = !state.showGridPreview;
-  toggleGridBtn.textContent = state.showGridPreview ? "Hide Grid Preview" : "Show Grid Preview";
-  gridPreviewCard.style.display = state.showGridPreview ? "block" : "none";
-});
+  ["dragleave", "drop"].forEach((eventName) => {
+    dropZone.addEventListener(eventName, (event) => {
+      event.preventDefault();
+      dropZone.classList.remove("drag-over");
+    });
+  });
 
-downloadBtn.addEventListener("click", downloadPreview);
-resetBtn.addEventListener("click", resetTool);
+  dropZone.addEventListener("drop", (event) => {
+    const file = event.dataTransfer.files[0];
+    if (file) handleImageFile(file, "drag_drop");
+  });
+}
 
-function handleImageFile(file) {
+if (toggleSafeBtn) {
+  toggleSafeBtn.addEventListener("click", () => {
+    state.showSafeZone = !state.showSafeZone;
+    toggleSafeBtn.textContent = state.showSafeZone ? "Hide Safe Zone" : "Show Safe Zone";
+    drawReelPreview();
+    trackEvent("safe_zone_toggle", {
+      safe_zone_visible: state.showSafeZone ? "yes" : "no"
+    });
+  });
+}
+
+if (toggleGridBtn && gridPreviewCard) {
+  toggleGridBtn.addEventListener("click", () => {
+    state.showGridPreview = !state.showGridPreview;
+    toggleGridBtn.textContent = state.showGridPreview ? "Hide Grid Preview" : "Show Grid Preview";
+    gridPreviewCard.style.display = state.showGridPreview ? "block" : "none";
+    trackEvent("grid_preview_toggle", {
+      grid_preview_visible: state.showGridPreview ? "yes" : "no"
+    });
+  });
+}
+
+if (downloadBtn) {
+  downloadBtn.addEventListener("click", downloadPreview);
+}
+
+if (resetBtn) {
+  resetBtn.addEventListener("click", resetTool);
+}
+
+function handleImageFile(file, uploadMethod = "unknown") {
+  trackEvent("image_upload", {
+    upload_method: uploadMethod,
+    file_type: file.type || "unknown",
+    file_size_bucket: getFileSizeBucket(file.size)
+  });
+
   if (!file.type.startsWith("image/")) {
     setStatus("Please upload a valid image file.", "error");
+    trackEvent("image_upload_error", { error_reason: "invalid_file_type" });
     return;
   }
 
   if (file.size > MAX_FILE_SIZE) {
     setStatus("This image is too large. Please upload an image under 10 MB.", "error");
+    trackEvent("image_upload_error", { error_reason: "file_too_large" });
     return;
   }
 
@@ -104,27 +159,37 @@ function handleImageFile(file) {
     state.showSafeZone = true;
     state.showGridPreview = true;
 
-    updateImageInfo(image, file);
+    const ratioStatus = updateImageInfo(image, file);
     showToolControls();
     drawReelPreview();
     drawGridPreview();
 
     setStatus("Image loaded successfully. Check the preview and safe zones.", "success");
+
+    trackEvent("cover_checked", {
+      image_width: image.naturalWidth,
+      image_height: image.naturalHeight,
+      ratio_status: ratioStatus
+    });
   };
 
   image.onerror = () => {
     URL.revokeObjectURL(imageUrl);
     setStatus("Could not load this image. Please try a different file.", "error");
+    trackEvent("image_upload_error", { error_reason: "image_load_failed" });
   };
 
   image.src = imageUrl;
 }
 
 function updateImageInfo(image, file) {
+  if (!dimensionResult || !ratioResult || !recommendationText || !statusMessage) return "unknown";
+
   const width = image.naturalWidth;
   const height = image.naturalHeight;
   const ratio = width / height;
   const difference = Math.abs(ratio - TARGET_RATIO);
+  let ratioStatus = "good_9_16_fit";
 
   dimensionResult.textContent = `${width} × ${height}px`;
 
@@ -134,11 +199,13 @@ function updateImageInfo(image, file) {
     recommendationText.textContent =
       "Great! Your image is close to 9:16. Now check whether important text, face, or logo stays inside the safe zone.";
   } else if (ratio > TARGET_RATIO) {
+    ratioStatus = "too_wide";
     ratioResult.textContent = "Too wide";
     ratioResult.style.color = "var(--warning)";
     recommendationText.textContent =
       "Your image is wider than 9:16. Some left and right parts may be cropped in a vertical Reel preview.";
   } else {
+    ratioStatus = "too_tall_or_narrow";
     ratioResult.textContent = "Too tall/narrow";
     ratioResult.style.color = "var(--warning)";
     recommendationText.textContent =
@@ -147,26 +214,30 @@ function updateImageInfo(image, file) {
 
   const readableSize = formatFileSize(file.size);
   statusMessage.textContent = `Loaded: ${file.name} (${readableSize})`;
+  return ratioStatus;
 }
 
 function showToolControls() {
-  reelCanvas.style.display = "block";
-  gridCanvas.style.display = "block";
-  emptyPreview.style.display = "none";
-  emptyGridPreview.style.display = "none";
-  gridPreviewCard.style.display = "block";
+  if (reelCanvas) reelCanvas.style.display = "block";
+  if (gridCanvas) gridCanvas.style.display = "block";
+  if (emptyPreview) emptyPreview.style.display = "none";
+  if (emptyGridPreview) emptyGridPreview.style.display = "none";
+  if (gridPreviewCard) gridPreviewCard.style.display = "block";
 
-  toggleSafeBtn.disabled = false;
-  toggleGridBtn.disabled = false;
-  downloadBtn.disabled = false;
-  resetBtn.disabled = false;
-
-  toggleSafeBtn.textContent = "Hide Safe Zone";
-  toggleGridBtn.textContent = "Hide Grid Preview";
+  if (toggleSafeBtn) {
+    toggleSafeBtn.disabled = false;
+    toggleSafeBtn.textContent = "Hide Safe Zone";
+  }
+  if (toggleGridBtn) {
+    toggleGridBtn.disabled = false;
+    toggleGridBtn.textContent = "Hide Grid Preview";
+  }
+  if (downloadBtn) downloadBtn.disabled = false;
+  if (resetBtn) resetBtn.disabled = false;
 }
 
 function drawReelPreview() {
-  if (!state.image) return;
+  if (!state.image || !reelCtx || !reelCanvas) return;
 
   clearCanvas(reelCtx, reelCanvas);
   drawImageCover(reelCtx, state.image, TARGET_WIDTH, TARGET_HEIGHT);
@@ -177,7 +248,7 @@ function drawReelPreview() {
 }
 
 function drawGridPreview() {
-  if (!state.image) return;
+  if (!state.image || !gridCtx || !gridCanvas) return;
 
   clearCanvas(gridCtx, gridCanvas);
 
@@ -285,6 +356,8 @@ function drawSafeZoneOverlay(ctx) {
 }
 
 function drawGridOverlay(ctx) {
+  if (!gridCanvas) return;
+
   ctx.save();
 
   ctx.strokeStyle = "rgba(255, 255, 255, 0.82)";
@@ -312,7 +385,7 @@ function drawGridOverlay(ctx) {
 }
 
 function downloadPreview() {
-  if (!state.image) {
+  if (!state.image || !reelCanvas) {
     setStatus("Upload an image before downloading.", "error");
     return;
   }
@@ -322,17 +395,25 @@ function downloadPreview() {
   reelCanvas.toBlob((blob) => {
     if (!blob) {
       setStatus("Could not create the preview image. Please try again.", "error");
+      trackEvent("cover_download_error", { error_reason: "blob_failed" });
       return;
     }
 
     const link = document.createElement("a");
     const cleanName = state.fileName.replace(/\.[^/.]+$/, "").replace(/\s+/g, "-").toLowerCase();
+    const objectUrl = URL.createObjectURL(blob);
+
     link.download = `${cleanName || "reelcoverfit"}-checked-preview.png`;
-    link.href = URL.createObjectURL(blob);
+    link.href = objectUrl;
     link.click();
 
-    URL.revokeObjectURL(link.href);
+    window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
     setStatus("Preview downloaded successfully.", "success");
+
+    trackEvent("cover_download", {
+      file_name_length: state.fileName.length,
+      safe_zone_visible: state.showSafeZone ? "yes" : "no"
+    });
   }, "image/png");
 }
 
@@ -342,29 +423,34 @@ function resetTool() {
   state.showSafeZone = true;
   state.showGridPreview = true;
 
-  imageInput.value = "";
+  if (imageInput) imageInput.value = "";
 
-  clearCanvas(reelCtx, reelCanvas);
-  clearCanvas(gridCtx, gridCanvas);
+  if (reelCtx && reelCanvas) clearCanvas(reelCtx, reelCanvas);
+  if (gridCtx && gridCanvas) clearCanvas(gridCtx, gridCanvas);
 
-  reelCanvas.style.display = "none";
-  gridCanvas.style.display = "none";
-  emptyPreview.style.display = "block";
-  emptyGridPreview.style.display = "block";
-  gridPreviewCard.style.display = "block";
+  if (reelCanvas) reelCanvas.style.display = "none";
+  if (gridCanvas) gridCanvas.style.display = "none";
+  if (emptyPreview) emptyPreview.style.display = "block";
+  if (emptyGridPreview) emptyGridPreview.style.display = "block";
+  if (gridPreviewCard) gridPreviewCard.style.display = "block";
 
-  dimensionResult.textContent = "Not uploaded";
-  ratioResult.textContent = "Waiting";
-  ratioResult.style.color = "inherit";
-  recommendationText.textContent =
-    "Tip: Keep important text, face, and logo away from the top and bottom edges.";
+  if (dimensionResult) dimensionResult.textContent = "Not uploaded";
+  if (ratioResult) {
+    ratioResult.textContent = "Waiting";
+    ratioResult.style.color = "inherit";
+  }
+  if (recommendationText) {
+    recommendationText.textContent =
+      "Tip: Keep important text, face, and logo away from the top and bottom edges.";
+  }
 
-  toggleSafeBtn.disabled = true;
-  toggleGridBtn.disabled = true;
-  downloadBtn.disabled = true;
-  resetBtn.disabled = true;
+  if (toggleSafeBtn) toggleSafeBtn.disabled = true;
+  if (toggleGridBtn) toggleGridBtn.disabled = true;
+  if (downloadBtn) downloadBtn.disabled = true;
+  if (resetBtn) resetBtn.disabled = true;
 
   setStatus("Upload an image to start checking.", "");
+  trackEvent("tool_reset");
 }
 
 function clearCanvas(ctx, canvas) {
@@ -372,6 +458,8 @@ function clearCanvas(ctx, canvas) {
 }
 
 function setStatus(message, type) {
+  if (!statusMessage) return;
+
   statusMessage.textContent = message;
   statusMessage.className = "status-message";
 
