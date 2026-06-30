@@ -4,52 +4,89 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <title>Instagram Reel Size Checker & Cover Safe Zone Tool - ReelCoverFit</title>
-  <meta name="description" content="Use ReelCoverFit as a free Instagram Reel size checker and cover safe zone tool. Upload your reel cover, check 9:16 size, preview grid crop, and avoid text getting cut." />
-  <meta name="keywords" content="Instagram reel size checker, reel cover checker, reel safe zone, instagram cover size, reel thumbnail checker" />
+  <title>Free Instagram Reel Cover Size Checker & Safe Zone Preview | ReelCoverFit</title>
+  <meta name="description" content="Check your Instagram Reel cover size, safe zone, and profile grid crop for free. Upload your image, preview 9:16 fit, and avoid cropped Reel thumbnails." />
   <meta name="author" content="ReelCoverFit" />
-  <meta name="robots" content="index, follow" />
+  <meta name="robots" content="index, follow, max-image-preview:large" />
   <link rel="canonical" href="https://reelcoverfit.com/" />
 
-  <meta property="og:title" content="Instagram Reel Size Checker - ReelCoverFit" />
-  <meta property="og:description" content="Check your Instagram Reel cover size and safe zones before posting." />
+  <meta property="og:title" content="Free Instagram Reel Cover Size Checker - ReelCoverFit" />
+  <meta property="og:description" content="Upload your Reel cover and preview safe zones, 9:16 fit, and profile grid crop before posting." />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://reelcoverfit.com/" />
   <meta property="og:site_name" content="ReelCoverFit" />
 
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="Instagram Reel Size Checker - ReelCoverFit" />
-  <meta name="twitter:description" content="Upload your reel cover and preview safe zones before posting." />
+  <meta name="twitter:title" content="Free Instagram Reel Cover Size Checker - ReelCoverFit" />
+  <meta name="twitter:description" content="Preview your Instagram Reel cover safe zone and grid crop before posting." />
 
   <!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-N8PHKB7N4S"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-N8PHKB7N4S"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-N8PHKB7N4S');
+  </script>
 
-  gtag('config', 'G-N8PHKB7N4S');
-</script>
-
- <link rel="icon" type="image/svg+xml" href="/assets/logo.svg?v=4" />
-<link rel="shortcut icon" type="image/svg+xml" href="/assets/logo.svg?v=4" />
+  <link rel="icon" type="image/svg+xml" href="/assets/logo.svg?v=4" />
+  <link rel="shortcut icon" type="image/svg+xml" href="/assets/logo.svg?v=4" />
   <link rel="stylesheet" href="style.css" />
   <script defer src="script.js"></script>
 
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
-    "@type": "WebApplication",
-    "name": "ReelCoverFit",
-    "url": "https://reelcoverfit.com/",
-    "applicationCategory": "MultimediaApplication",
-    "operatingSystem": "Any",
-    "description": "A free browser-based Instagram Reel size checker and cover safe zone preview tool.",
-    "offers": {
-      "@type": "Offer",
-      "price": "0",
-      "priceCurrency": "USD"
-    }
+    "@graph": [
+      {
+        "@type": "WebSite",
+        "name": "ReelCoverFit",
+        "url": "https://reelcoverfit.com/",
+        "description": "Free Instagram Reel cover size checker and safe zone preview tool."
+      },
+      {
+        "@type": "WebApplication",
+        "name": "ReelCoverFit",
+        "url": "https://reelcoverfit.com/",
+        "applicationCategory": "MultimediaApplication",
+        "operatingSystem": "Any",
+        "description": "A free browser-based Instagram Reel size checker, safe zone preview, and profile grid crop checker.",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        }
+      },
+      {
+        "@type": "FAQPage",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "What is the best Instagram Reel cover size?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "The best Instagram Reel cover size is a vertical 9:16 image. A commonly used high-quality size is 1080 by 1920 pixels."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Why does my Instagram Reel cover get cropped?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "A Reel cover can look different in the full Reel view, profile grid, and thumbnail previews. If text or faces are too close to the edges, parts may appear cropped or hard to read."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Does ReelCoverFit upload my image?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "No. ReelCoverFit processes your image locally inside your browser and does not upload it to a server."
+            }
+          }
+        ]
+      }
+    ]
   }
   </script>
 </head>
@@ -63,9 +100,10 @@
 </a>
 
       <div class="nav-links">
-        <a href="#tool">Tool</a>
-        <a href="#guide">Guide</a>
-        <a href="#faq">FAQ</a>
+        <a href="#tool" data-track="nav_tool_click">Tool</a>
+        <a href="instagram-reel-cover-size.html" data-track="nav_size_guide_click">Size Guide</a>
+        <a href="why-instagram-reel-cover-cropped.html" data-track="nav_crop_fix_click">Crop Fix</a>
+        <a href="#faq" data-track="nav_faq_click">FAQ</a>
       </div>
     </nav>
   </header>
@@ -75,14 +113,14 @@
       <div class="container hero-grid">
         <div class="hero-content">
           <p class="eyebrow">Free browser-based tool</p>
-          <h1>Instagram Reel Size Checker & Cover Safe Zone Tool</h1>
+          <h1>Free Instagram Reel Cover Size Checker</h1>
           <p class="hero-text">
-            Upload your reel cover and check if your text, face, or logo fits safely inside a 9:16 Reel preview before posting.
+            Upload your Reel cover, preview the 9:16 safe zone, and check how it may look in your profile grid before you post.
           </p>
 
           <div class="hero-actions">
-            <a href="#tool" class="btn btn-primary">Check Reel Cover</a>
-            <a href="#guide" class="btn btn-secondary">View Size Guide</a>
+            <a href="#tool" class="btn btn-primary" data-track="hero_tool_click">Check My Reel Cover</a>
+            <a href="instagram-reel-cover-size.html" class="btn btn-secondary" data-track="hero_size_guide_click">Read Size Guide</a>
           </div>
 
           <p class="privacy-pill">
@@ -281,6 +319,30 @@
       </div>
     </section>
 
+    <section class="section resource-section">
+      <div class="container">
+        <div class="section-heading">
+          <p class="eyebrow">Useful guides</p>
+          <h2>Fix Reel cover problems faster</h2>
+          <p>Use these guides with the free checker to understand size, safe zone, and cropping issues.</p>
+        </div>
+
+        <div class="resource-grid">
+          <article class="resource-card card">
+            <h3>Instagram Reel Cover Size Guide</h3>
+            <p>Learn the best 9:16 cover size, recommended pixels, safe area, and profile grid crop tips.</p>
+            <a href="instagram-reel-cover-size.html" class="text-link" data-track="resource_size_guide_click">Read the guide →</a>
+          </article>
+
+          <article class="resource-card card">
+            <h3>Why Your Reel Cover Gets Cropped</h3>
+            <p>Understand why text, faces, or logos get cut off and how to fix the design before posting.</p>
+            <a href="why-instagram-reel-cover-cropped.html" class="text-link" data-track="resource_crop_fix_click">Fix cropping →</a>
+          </article>
+        </div>
+      </div>
+    </section>
+
     <section class="section safe-zone-section">
       <div class="container">
         <div class="section-heading">
@@ -439,6 +501,8 @@
           </p>
           <a
             class="btn btn-primary"
+            id="feedbackLink"
+            data-track="feedback_click"
             href="https://docs.google.com/forms/d/e/1FAIpQLSfT5VczsnB0pcrvcuKh632DZWmeEdgrW7jQjnUT6kgMmyT8yw/viewform?usp=publish-editor"
             target="_blank"
             rel="noopener noreferrer"
@@ -464,10 +528,12 @@
 
       <div class="footer-links">
   <a href="about.html">About</a>
-  <a href="contact.html">Contact</a>
+  <a href="contact.html" data-track="contact_click">Contact</a>
+  <a href="instagram-reel-cover-size.html" data-track="footer_size_guide_click">Size Guide</a>
+  <a href="why-instagram-reel-cover-cropped.html" data-track="footer_crop_fix_click">Crop Fix</a>
   <a href="privacy.html">Privacy Policy</a>
   <a href="terms.html">Terms</a>
-  <a href="#tool">Use Tool</a>
+  <a href="#tool" data-track="footer_tool_click">Use Tool</a>
 </div>
     </div>
   </footer>
