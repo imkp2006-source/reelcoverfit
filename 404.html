@@ -24,20 +24,23 @@
   <link rel="icon" type="image/svg+xml" href="/assets/logo.svg?v=4" />
   <link rel="shortcut icon" type="image/svg+xml" href="/assets/logo.svg?v=4" />
   <link rel="stylesheet" href="style.css" />
+  <script defer src="script.js"></script>
 </head>
 
 <body>
   <header class="site-header">
     <nav class="nav container" aria-label="Main navigation">
-      <a href="index.html" class="logo">
+      <a href="index.html" class="logo" aria-label="ReelCoverFit home">
         <img src="assets/logo.svg" alt="ReelCoverFit logo" class="logo-img" />
         <span>ReelCoverFit</span>
       </a>
 
       <div class="nav-links">
-        <a href="index.html#tool">Tool</a>
-        <a href="index.html#guide">Guide</a>
-        <a href="index.html#faq">FAQ</a>
+        <a href="index.html#tool" data-track="nav_tool_click">Tool</a>
+        <a href="instagram-reel-cover-size.html" data-track="nav_size_guide_click">Size Guide</a>
+        <a href="why-instagram-reel-cover-cropped.html" data-track="nav_crop_fix_click">Crop Fix</a>
+        <a href="instagram-reel-thumbnail-safe-zone.html" data-track="nav_safe_zone_click">Safe Zone</a>
+        <a href="index.html#faq" data-track="nav_faq_click">FAQ</a>
       </div>
     </nav>
   </header>
@@ -64,6 +67,8 @@
     </div>
   </main>
 
+  <a href="index.html#tool" class="sticky-tool-cta" data-track="sticky_tool_click">Check Cover Free</a>
+
   <footer class="site-footer">
     <div class="container footer-content">
       <div>
@@ -71,17 +76,19 @@
           <img src="assets/logo.svg" alt="ReelCoverFit logo" class="logo-img" />
           <span>ReelCoverFit</span>
         </a>
-        <p>
-          ReelCoverFit is an unofficial tool and is not affiliated with Instagram, Meta, or any social media platform.
-        </p>
+        <p>ReelCoverFit is an unofficial tool and is not affiliated with Instagram, Meta, or any social media platform.</p>
       </div>
 
       <div class="footer-links">
         <a href="about.html">About</a>
-        <a href="contact.html">Contact</a>
+        <a href="contact.html" data-track="contact_click">Contact</a>
+        <a href="instagram-reel-cover-size.html" data-track="footer_size_guide_click">Size Guide</a>
+        <a href="why-instagram-reel-cover-cropped.html" data-track="footer_crop_fix_click">Crop Fix</a>
+        <a href="instagram-reel-thumbnail-safe-zone.html" data-track="footer_safe_zone_click">Safe Zone</a>
+        <a href="canva-instagram-reel-cover-size.html" data-track="footer_canva_click">Canva Workflow</a>
         <a href="privacy.html">Privacy Policy</a>
         <a href="terms.html">Terms</a>
-        <a href="index.html#tool">Use Tool</a>
+        <a href="index.html#tool" data-track="footer_tool_click">Use Tool</a>
       </div>
     </div>
   </footer>

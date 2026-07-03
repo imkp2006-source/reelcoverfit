@@ -33,7 +33,7 @@ const downloadBtn = document.getElementById("downloadBtn");
 const resetBtn = document.getElementById("resetBtn");
 
 function trackEvent(eventName, eventParams = {}) {
-  if (typeof gtag === "function") {
+  if (typeof window.gtag === "function") {
     gtag("event", eventName, {
       tool_name: "reelcoverfit",
       page_path: window.location.pathname,
@@ -489,3 +489,27 @@ function roundRect(ctx, x, y, width, height, radius) {
   ctx.quadraticCurveTo(x, y, x + radius, y);
   ctx.closePath();
 }
+
+
+// scroll_depth_tracking
+const scrollDepthState = {
+  25: false,
+  50: false,
+  75: false,
+  90: false
+};
+
+window.addEventListener("scroll", () => {
+  const scrollableHeight = document.documentElement.scrollHeight - window.innerHeight;
+  if (scrollableHeight <= 0) return;
+
+  const scrollPercent = Math.round((window.scrollY / scrollableHeight) * 100);
+
+  Object.keys(scrollDepthState).forEach((depth) => {
+    const depthNumber = Number(depth);
+    if (scrollPercent >= depthNumber && !scrollDepthState[depthNumber]) {
+      scrollDepthState[depthNumber] = true;
+      trackEvent(`scroll_${depthNumber}`);
+    }
+  });
+}, { passive: true });

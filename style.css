@@ -936,3 +936,70 @@ details p {
     grid-template-columns: repeat(2, 1fr);
   }
 }
+
+
+/* Extra SEO/resource sections */
+.resource-card a:focus,
+.sticky-tool-cta:focus,
+.text-link:focus {
+  outline: 3px solid rgba(124, 58, 237, 0.35);
+  outline-offset: 3px;
+}
+
+.sticky-tool-cta {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  z-index: 9998;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 12px 18px;
+  border-radius: 999px;
+  background: var(--primary);
+  color: #ffffff;
+  font-weight: 850;
+  box-shadow: 0 18px 42px rgba(124, 58, 237, 0.3);
+}
+
+.sticky-tool-cta:hover {
+  background: var(--primary-dark);
+  transform: translateY(-2px);
+}
+
+.article-related-grid {
+  display: grid;
+  gap: 14px;
+  margin-top: 18px;
+}
+
+.article-related-grid a {
+  padding: 14px 16px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-soft);
+  color: var(--primary);
+  font-weight: 850;
+}
+
+.article-related-grid a:hover {
+  color: var(--primary-dark);
+}
+
+@media (min-width: 720px) {
+  .article-related-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 560px) {
+  .sticky-tool-cta {
+    left: 16px;
+    right: 16px;
+    bottom: 16px;
+  }
+
+  body {
+    padding-bottom: 74px;
+  }
+}

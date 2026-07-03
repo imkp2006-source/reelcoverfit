@@ -1,24 +1,29 @@
 <!DOCTYPE html>
 <html lang="en">
+  
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <title>Free Instagram Reel Cover Size Checker & Safe Zone Preview | ReelCoverFit</title>
-  <meta name="description" content="Check your Instagram Reel cover size, safe zone, and profile grid crop for free. Upload your image, preview 9:16 fit, and avoid cropped Reel thumbnails." />
+  <title>Free Instagram Reel Cover Size Checker, Safe Zone & Grid Preview | ReelCoverFit</title>
+  <meta name="description" content="Free Instagram Reel cover size checker. Upload your cover, preview 9:16 fit, safe zones, profile grid crop, and avoid cropped Reel thumbnails before posting." />
   <meta name="author" content="ReelCoverFit" />
   <meta name="robots" content="index, follow, max-image-preview:large" />
   <link rel="canonical" href="https://reelcoverfit.com/" />
 
   <meta property="og:title" content="Free Instagram Reel Cover Size Checker - ReelCoverFit" />
-  <meta property="og:description" content="Upload your Reel cover and preview safe zones, 9:16 fit, and profile grid crop before posting." />
+  <meta property="og:description" content="Check Instagram Reel cover size, safe zone, and profile grid crop before posting. Free browser-based tool." />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://reelcoverfit.com/" />
   <meta property="og:site_name" content="ReelCoverFit" />
+  <meta property="og:image" content="https://reelcoverfit.com/assets/reelcoverfit-og.png" />
+  <meta property="og:image:alt" content="ReelCoverFit Instagram Reel cover checker preview" />
 
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="Free Instagram Reel Cover Size Checker - ReelCoverFit" />
-  <meta name="twitter:description" content="Preview your Instagram Reel cover safe zone and grid crop before posting." />
+  <meta name="twitter:description" content="Preview your Instagram Reel cover safe zone and profile grid crop before posting." />
+  <meta name="twitter:image" content="https://reelcoverfit.com/assets/reelcoverfit-og.png" />
+  <meta name="theme-color" content="#7c3aed" />
 
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-N8PHKB7N4S"></script>
@@ -42,7 +47,12 @@
         "@type": "WebSite",
         "name": "ReelCoverFit",
         "url": "https://reelcoverfit.com/",
-        "description": "Free Instagram Reel cover size checker and safe zone preview tool."
+        "description": "Free Instagram Reel cover size checker, safe zone preview, and profile grid crop tool.",
+        "potentialAction": {
+          "@type": "SearchAction",
+          "target": "https://reelcoverfit.com/?q={search_term_string}",
+          "query-input": "required name=search_term_string"
+        }
       },
       {
         "@type": "WebApplication",
@@ -50,12 +60,19 @@
         "url": "https://reelcoverfit.com/",
         "applicationCategory": "MultimediaApplication",
         "operatingSystem": "Any",
-        "description": "A free browser-based Instagram Reel size checker, safe zone preview, and profile grid crop checker.",
+        "description": "A free browser-based Instagram Reel cover size checker, safe zone preview, and profile grid crop checker.",
         "offers": {
           "@type": "Offer",
           "price": "0",
           "priceCurrency": "USD"
-        }
+        },
+        "featureList": [
+          "Instagram Reel cover size checker",
+          "9:16 aspect ratio preview",
+          "Safe zone overlay",
+          "Profile grid crop preview",
+          "Browser-based private image processing"
+        ]
       },
       {
         "@type": "FAQPage",
@@ -65,7 +82,7 @@
             "name": "What is the best Instagram Reel cover size?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "The best Instagram Reel cover size is a vertical 9:16 image. A commonly used high-quality size is 1080 by 1920 pixels."
+              "text": "A vertical 9:16 image is usually best for Instagram Reel covers. A common high-quality export size is 1080 by 1920 pixels."
             }
           },
           {
@@ -73,7 +90,7 @@
             "name": "Why does my Instagram Reel cover get cropped?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "A Reel cover can look different in the full Reel view, profile grid, and thumbnail previews. If text or faces are too close to the edges, parts may appear cropped or hard to read."
+              "text": "A Reel cover can appear differently in the full Reel view, profile grid, and thumbnails. Text or faces placed too close to the edges may get cropped or become hard to read."
             }
           },
           {
@@ -81,7 +98,7 @@
             "name": "Does ReelCoverFit upload my image?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "No. ReelCoverFit processes your image locally inside your browser and does not upload it to a server."
+              "text": "No. ReelCoverFit processes the selected image locally inside your browser and does not upload it to a server."
             }
           }
         ]
@@ -103,6 +120,7 @@
         <a href="#tool" data-track="nav_tool_click">Tool</a>
         <a href="instagram-reel-cover-size.html" data-track="nav_size_guide_click">Size Guide</a>
         <a href="why-instagram-reel-cover-cropped.html" data-track="nav_crop_fix_click">Crop Fix</a>
+        <a href="instagram-reel-thumbnail-safe-zone.html" data-track="nav_safe_zone_click">Safe Zone</a>
         <a href="#faq" data-track="nav_faq_click">FAQ</a>
       </div>
     </nav>
@@ -339,6 +357,18 @@
             <p>Understand why text, faces, or logos get cut off and how to fix the design before posting.</p>
             <a href="why-instagram-reel-cover-cropped.html" class="text-link" data-track="resource_crop_fix_click">Fix cropping →</a>
           </article>
+
+          <article class="resource-card card">
+            <h3>Instagram Reel Thumbnail Safe Zone</h3>
+            <p>Know where to place titles, faces, logos, and products so your cover stays readable.</p>
+            <a href="instagram-reel-thumbnail-safe-zone.html" class="text-link" data-track="resource_safe_zone_click">View safe zone guide →</a>
+          </article>
+
+          <article class="resource-card card">
+            <h3>Canva Reel Cover Workflow</h3>
+            <p>Design your Reel cover in Canva, export it correctly, and test it with ReelCoverFit.</p>
+            <a href="canva-instagram-reel-cover-size.html" class="text-link" data-track="resource_canva_click">Canva workflow →</a>
+          </article>
         </div>
       </div>
     </section>
@@ -527,14 +557,16 @@
       </div>
 
       <div class="footer-links">
-  <a href="about.html">About</a>
-  <a href="contact.html" data-track="contact_click">Contact</a>
-  <a href="instagram-reel-cover-size.html" data-track="footer_size_guide_click">Size Guide</a>
-  <a href="why-instagram-reel-cover-cropped.html" data-track="footer_crop_fix_click">Crop Fix</a>
-  <a href="privacy.html">Privacy Policy</a>
-  <a href="terms.html">Terms</a>
-  <a href="#tool" data-track="footer_tool_click">Use Tool</a>
-</div>
+        <a href="about.html">About</a>
+        <a href="contact.html" data-track="contact_click">Contact</a>
+        <a href="instagram-reel-cover-size.html" data-track="footer_size_guide_click">Size Guide</a>
+        <a href="why-instagram-reel-cover-cropped.html" data-track="footer_crop_fix_click">Crop Fix</a>
+        <a href="instagram-reel-thumbnail-safe-zone.html" data-track="footer_safe_zone_click">Safe Zone</a>
+        <a href="canva-instagram-reel-cover-size.html" data-track="footer_canva_click">Canva Workflow</a>
+        <a href="privacy.html">Privacy Policy</a>
+        <a href="terms.html">Terms</a>
+        <a href="index.html#tool" data-track="footer_tool_click">Use Tool</a>
+      </div>
     </div>
   </footer>
 </body>

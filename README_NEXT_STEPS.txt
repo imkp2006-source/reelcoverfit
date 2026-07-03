@@ -1,29 +1,33 @@
-ReelCoverFit updated files
+ReelCoverFit updated files - July 2026
 
-Upload/replace these files on your hosting:
+Replace the files in your project with the files in this folder.
+
+Important files changed:
 - index.html
 - style.css
 - script.js
+- sitemap.xml
+- robots.txt
 - instagram-reel-cover-size.html
 - why-instagram-reel-cover-cropped.html
+- about.html
+- contact.html
+- privacy.html
+- terms.html
+- 404.html
 
-After upload, test:
-1. Open reelcoverfit.com.
-2. Click Check My Reel Cover.
-3. Upload an image.
-4. Download preview.
-5. Open Google Analytics Realtime / DebugView and confirm these events appear:
-   - image_upload
-   - cover_checked
-   - cover_download
-   - feedback_click if you click feedback
+New files added:
+- instagram-reel-thumbnail-safe-zone.html
+- canva-instagram-reel-cover-size.html
+- assets/reelcoverfit-og.png
 
-In GA4 Admin > Data display > Events, mark these as key events:
-- cover_download
-- feedback_click
-- contact_click
-
-Then in Google Search Console:
-- Inspect https://reelcoverfit.com/
-- Request indexing.
-- Inspect and request indexing for the two new guide pages.
+After uploading to GitHub/Cloudflare:
+1. Open https://reelcoverfit.com/
+2. Test image upload and Download Preview.
+3. Open these URLs:
+   - https://reelcoverfit.com/sitemap.xml
+   - https://reelcoverfit.com/robots.txt
+   - https://reelcoverfit.com/instagram-reel-thumbnail-safe-zone.html
+   - https://reelcoverfit.com/canva-instagram-reel-cover-size.html
+4. In Google Search Console, request indexing for the homepage and both new guide pages.
+5. In GA4, watch for events: image_upload, cover_checked, cover_download, feedback_click, scroll_25, scroll_50, scroll_75, scroll_90.
