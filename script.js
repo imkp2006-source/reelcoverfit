@@ -409,6 +409,9 @@ function downloadPreview() {
 
     window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
     setStatus("Preview downloaded successfully.", "success");
+    if (shareBox) {
+  shareBox.hidden = false;
+}
 
     trackEvent("cover_download", {
       file_name_length: state.fileName.length,
@@ -513,3 +516,135 @@ window.addEventListener("scroll", () => {
     }
   });
 }, { passive: true });
+
+const platformButtons = document.querySelectorAll(".platform-btn");
+const templateButtons = document.querySelectorAll(".template-btn");
+const shareBox = document.getElementById("shareBox");
+const copySiteLinkBtn = document.getElementById("copySiteLinkBtn");
+
+platformButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    platformButtons.forEach((btn) => btn.classList.remove("active"));
+    button.classList.add("active");
+
+    const platform = button.dataset.platform;
+
+    recommendationText.textContent =
+      `${platform} selected. Use a vertical 9:16 cover and keep text near the center safe zone.`;
+
+    trackEvent("platform_selected", {
+      platform
+    });
+  });
+});
+
+templateButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    createTemplateCover(button.dataset.template);
+  });
+});
+
+if (copySiteLinkBtn) {
+  copySiteLinkBtn.addEventListener("click", async () => {
+    try {
+      await navigator.clipboard.writeText("https://reelcoverfit.com/");
+      setStatus("Website link copied.", "success");
+      trackEvent("copy_site_link");
+    } catch {
+      setStatus("Copy failed. Manually copy reelcoverfit.com", "warning");
+    }
+  });
+}
+
+function createTemplateCover(type) {
+  const templateCanvas = document.createElement("canvas");
+  templateCanvas.width = TARGET_WIDTH;
+  templateCanvas.height = TARGET_HEIGHT;
+
+  const ctx = templateCanvas.getContext("2d");
+  const gradient = ctx.createLinearGradient(0, 0, TARGET_WIDTH, TARGET_HEIGHT);
+
+  const themes = {
+    minimal: ["#f8fafc", "#e2e8f0", "#0f172a", "MINIMAL COVER"],
+    bold: ["#111827", "#9333ea", "#ffffff", "BOLD REEL COVER"],
+    fitness: ["#020617", "#ef4444", "#ffffff", "FITNESS TRANSFORMATION"],
+    food: ["#f97316", "#facc15", "#111827", "FOOD RECIPE"],
+    business: ["#0f172a", "#2563eb", "#ffffff", "BUSINESS TIPS"],
+    travel: ["#06b6d4", "#22c55e", "#ffffff", "TRAVEL VLOG"]
+  };
+
+  const selectedTheme = themes[type] || themes.bold;
+
+  gradient.addColorStop(0, selectedTheme[0]);
+  gradient.addColorStop(1, selectedTheme[1]);
+
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, TARGET_WIDTH, TARGET_HEIGHT);
+
+  ctx.fillStyle = selectedTheme[2];
+  ctx.textAlign = "center";
+
+  ctx.font = "900 86px Arial, sans-serif";
+  wrapText(ctx, selectedTheme[3], TARGET_WIDTH / 2, 820, 820, 100);
+
+  ctx.font = "700 38px Arial, sans-serif";
+  ctx.fillText("Made with ReelCoverFit", TARGET_WIDTH / 2, 1040);
+
+  templateCanvas.toBlob((blob) => {
+    if (!blob) return;
+
+    const imageUrl = URL.createObjectURL(blob);
+    const image = new Image();
+
+    image.onload = () => {
+      URL.revokeObjectURL(imageUrl);
+
+      state.image = image;
+      state.fileName = `${type}-template.png`;
+      state.showSafeZone = true;
+      state.showGridPreview = true;
+
+      const fakeFile = {
+        name: state.fileName,
+        size: blob.size
+      };
+
+      updateImageInfo(image, fakeFile);
+      showToolControls();
+      drawReelPreview();
+      drawGridPreview();
+
+      setStatus(`${capitalize(type)} template applied. You can download the preview.`, "success");
+
+      trackEvent("template_selected", {
+        template: type
+      });
+    };
+
+    image.src = imageUrl;
+  }, "image/png");
+}
+
+function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
+  const words = text.split(" ");
+  let line = "";
+
+  for (let i = 0; i < words.length; i++) {
+    const testLine = line + words[i] + " ";
+    const metrics = ctx.measureText(testLine);
+
+    if (metrics.width > maxWidth && i > 0) {
+      ctx.fillText(line, x, y);
+      line = words[i] + " ";
+      y += lineHeight;
+    } else {
+      line = testLine;
+    }
+  }
+
+  ctx.fillText(line, x, y);
+}
+
+function capitalize(text) {
+  return text.charAt(0).toUpperCase() + text.slice(1);
+}
