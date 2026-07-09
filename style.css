@@ -1058,3 +1058,129 @@ details p {
 .share-box p {
   color: var(--muted);
 }
+
+
+/* ReelCoverFit v1.8: creator score + accessibility polish */
+.skip-link {
+  position: absolute;
+  left: 16px;
+  top: -120px;
+  z-index: 10000;
+  padding: 10px 14px;
+  border-radius: 999px;
+  background: var(--primary);
+  color: #ffffff;
+  font-weight: 850;
+  box-shadow: var(--shadow);
+  transition: top 0.2s ease;
+}
+
+.skip-link:focus {
+  top: 16px;
+  outline: 3px solid rgba(124, 58, 237, 0.35);
+  outline-offset: 3px;
+}
+
+a:focus-visible,
+button:focus-visible,
+.drop-zone:focus-visible {
+  outline: 3px solid rgba(124, 58, 237, 0.38);
+  outline-offset: 3px;
+}
+
+.creator-score-card {
+  margin-top: 18px;
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: linear-gradient(135deg, rgba(124, 58, 237, 0.12), rgba(236, 72, 153, 0.08));
+}
+
+.creator-score-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+.creator-score-value {
+  min-width: 76px;
+  min-height: 76px;
+  display: grid;
+  place-items: center;
+  border-radius: 24px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--primary);
+  font-size: 1.45rem;
+  box-shadow: 0 12px 30px rgba(124, 58, 237, 0.14);
+}
+
+.creator-checklist {
+  list-style: none;
+  padding: 0;
+  margin: 16px 0 0;
+  display: grid;
+  gap: 10px;
+}
+
+.creator-checklist li {
+  position: relative;
+  padding-left: 30px;
+  color: var(--muted);
+  font-weight: 720;
+}
+
+.creator-checklist li::before {
+  content: "○";
+  position: absolute;
+  left: 0;
+  color: var(--muted);
+  font-weight: 900;
+}
+
+.creator-checklist li.pass::before {
+  content: "✓";
+  color: var(--success);
+}
+
+.creator-checklist li.warn::before {
+  content: "!";
+  color: var(--warning);
+}
+
+.creator-checklist li.fail::before {
+  content: "×";
+  color: var(--danger);
+}
+
+.platform-btn.active,
+.platform-btn[aria-pressed="true"] {
+  background: var(--primary);
+  color: #ffffff;
+  border-color: var(--primary);
+}
+
+@media (max-width: 560px) {
+  .creator-score-top {
+    align-items: flex-start;
+  }
+
+  .creator-score-value {
+    min-width: 64px;
+    min-height: 64px;
+    border-radius: 20px;
+    font-size: 1.15rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
