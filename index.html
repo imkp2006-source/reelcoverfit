@@ -109,6 +109,7 @@
 </head>
 
 <body>
+  <a class="skip-link" href="#tool">Skip to tool</a>
   <header class="site-header">
     <nav class="nav container" aria-label="Main navigation">
       <a href="index.html" class="logo" aria-label="ReelCoverFit home">
@@ -215,23 +216,40 @@
             <p id="recommendationText" class="recommendation">
               Tip: Keep important text, face, and logo away from the top and bottom edges.
             </p>
+
+            <div id="creatorScoreCard" class="creator-score-card" aria-live="polite">
+              <div class="creator-score-top">
+                <div>
+                  <span class="result-label">Creator readiness</span>
+                  <h3>Reel Cover Score</h3>
+                </div>
+                <strong id="creatorScoreValue" class="creator-score-value">--</strong>
+              </div>
+              <ul class="creator-checklist" aria-label="Reel cover quality checklist">
+                <li id="scoreRatio">Upload an image to check 9:16 fit.</li>
+                <li id="scoreResolution">Resolution check waiting.</li>
+                <li id="scoreSafeZone">Safe zone guidance waiting.</li>
+                <li id="scoreGrid">Grid crop preview waiting.</li>
+              </ul>
+            </div>
+
             <div class="creator-tools-box">
   <h3>Choose Platform</h3>
   <div class="platform-tabs">
-    <button class="platform-btn active" data-platform="Instagram Reels">Instagram Reels</button>
-    <button class="platform-btn" data-platform="YouTube Shorts">YouTube Shorts</button>
-    <button class="platform-btn" data-platform="TikTok">TikTok</button>
-    <button class="platform-btn" data-platform="Facebook Reels">Facebook Reels</button>
+    <button type="button" class="platform-btn active" data-platform="Instagram Reels" aria-pressed="true">Instagram Reels</button>
+    <button type="button" class="platform-btn" data-platform="YouTube Shorts" aria-pressed="false">YouTube Shorts</button>
+    <button type="button" class="platform-btn" data-platform="TikTok" aria-pressed="false">TikTok</button>
+    <button type="button" class="platform-btn" data-platform="Facebook Reels" aria-pressed="false">Facebook Reels</button>
   </div>
 
   <h3>Try a Ready Template</h3>
   <div class="template-grid">
-    <button class="template-btn" data-template="minimal">Minimal</button>
-    <button class="template-btn" data-template="bold">Bold</button>
-    <button class="template-btn" data-template="fitness">Fitness</button>
-    <button class="template-btn" data-template="food">Food</button>
-    <button class="template-btn" data-template="business">Business</button>
-    <button class="template-btn" data-template="travel">Travel</button>
+    <button type="button" class="template-btn" data-template="minimal">Minimal</button>
+    <button type="button" class="template-btn" data-template="bold">Bold</button>
+    <button type="button" class="template-btn" data-template="fitness">Fitness</button>
+    <button type="button" class="template-btn" data-template="food">Food</button>
+    <button type="button" class="template-btn" data-template="business">Business</button>
+    <button type="button" class="template-btn" data-template="travel">Travel</button>
   </div>
 </div>
 
@@ -242,10 +260,10 @@
 </div>
 
             <div class="button-group">
-              <button id="toggleSafeBtn" class="btn btn-secondary" type="button" disabled>
+              <button id="toggleSafeBtn" class="btn btn-secondary" type="button" aria-pressed="true" disabled>
                 Hide Safe Zone
               </button>
-              <button id="toggleGridBtn" class="btn btn-secondary" type="button" disabled>
+              <button id="toggleGridBtn" class="btn btn-secondary" type="button" aria-pressed="true" disabled>
                 Hide Grid Preview
               </button>
               <button id="downloadBtn" class="btn btn-primary" type="button" disabled>
