@@ -17,6 +17,11 @@ const statusMessage = document.getElementById("statusMessage");
 const dimensionResult = document.getElementById("dimensionResult");
 const ratioResult = document.getElementById("ratioResult");
 const recommendationText = document.getElementById("recommendationText");
+const creatorScoreValue = document.getElementById("creatorScoreValue");
+const scoreRatio = document.getElementById("scoreRatio");
+const scoreResolution = document.getElementById("scoreResolution");
+const scoreSafeZone = document.getElementById("scoreSafeZone");
+const scoreGrid = document.getElementById("scoreGrid");
 
 const reelCanvas = document.getElementById("reelCanvas");
 const reelCtx = reelCanvas ? reelCanvas.getContext("2d") : null;
@@ -101,6 +106,7 @@ if (toggleSafeBtn) {
   toggleSafeBtn.addEventListener("click", () => {
     state.showSafeZone = !state.showSafeZone;
     toggleSafeBtn.textContent = state.showSafeZone ? "Hide Safe Zone" : "Show Safe Zone";
+    toggleSafeBtn.setAttribute("aria-pressed", state.showSafeZone ? "true" : "false");
     drawReelPreview();
     trackEvent("safe_zone_toggle", {
       safe_zone_visible: state.showSafeZone ? "yes" : "no"
@@ -112,6 +118,7 @@ if (toggleGridBtn && gridPreviewCard) {
   toggleGridBtn.addEventListener("click", () => {
     state.showGridPreview = !state.showGridPreview;
     toggleGridBtn.textContent = state.showGridPreview ? "Hide Grid Preview" : "Show Grid Preview";
+    toggleGridBtn.setAttribute("aria-pressed", state.showGridPreview ? "true" : "false");
     gridPreviewCard.style.display = state.showGridPreview ? "block" : "none";
     trackEvent("grid_preview_toggle", {
       grid_preview_visible: state.showGridPreview ? "yes" : "no"
@@ -160,6 +167,7 @@ function handleImageFile(file, uploadMethod = "unknown") {
     state.showGridPreview = true;
 
     const ratioStatus = updateImageInfo(image, file);
+    updateCreatorScore(image, ratioStatus);
     showToolControls();
     drawReelPreview();
     drawGridPreview();
@@ -227,10 +235,12 @@ function showToolControls() {
   if (toggleSafeBtn) {
     toggleSafeBtn.disabled = false;
     toggleSafeBtn.textContent = "Hide Safe Zone";
+    toggleSafeBtn.setAttribute("aria-pressed", "true");
   }
   if (toggleGridBtn) {
     toggleGridBtn.disabled = false;
     toggleGridBtn.textContent = "Hide Grid Preview";
+    toggleGridBtn.setAttribute("aria-pressed", "true");
   }
   if (downloadBtn) downloadBtn.disabled = false;
   if (resetBtn) resetBtn.disabled = false;
@@ -447,8 +457,16 @@ function resetTool() {
       "Tip: Keep important text, face, and logo away from the top and bottom edges.";
   }
 
-  if (toggleSafeBtn) toggleSafeBtn.disabled = true;
-  if (toggleGridBtn) toggleGridBtn.disabled = true;
+  resetCreatorScore();
+
+  if (toggleSafeBtn) {
+    toggleSafeBtn.disabled = true;
+    toggleSafeBtn.setAttribute("aria-pressed", "false");
+  }
+  if (toggleGridBtn) {
+    toggleGridBtn.disabled = true;
+    toggleGridBtn.setAttribute("aria-pressed", "false");
+  }
   if (downloadBtn) downloadBtn.disabled = true;
   if (resetBtn) resetBtn.disabled = true;
 
@@ -469,6 +487,70 @@ function setStatus(message, type) {
   if (type) {
     statusMessage.classList.add(type);
   }
+}
+
+function updateCreatorScore(image, ratioStatus) {
+  if (!creatorScoreValue || !scoreRatio || !scoreResolution || !scoreSafeZone || !scoreGrid) return;
+
+  let score = 100;
+  const width = image.naturalWidth;
+  const height = image.naturalHeight;
+
+  if (ratioStatus !== "good_9_16_fit") score -= 22;
+  if (width < 720 || height < 1280) score -= 16;
+  else if (width < TARGET_WIDTH || height < TARGET_HEIGHT) score -= 7;
+
+  score = Math.max(55, Math.min(100, score));
+  creatorScoreValue.textContent = `${score}/100`;
+
+  setChecklistItem(
+    scoreRatio,
+    ratioStatus === "good_9_16_fit" ? "pass" : "warn",
+    ratioStatus === "good_9_16_fit"
+      ? "9:16 fit looks good for Reel covers."
+      : "Aspect ratio needs attention; preview may crop important parts."
+  );
+
+  const highResolution = width >= TARGET_WIDTH && height >= TARGET_HEIGHT;
+  const usableResolution = width >= 720 && height >= 1280;
+  setChecklistItem(
+    scoreResolution,
+    highResolution ? "pass" : usableResolution ? "warn" : "fail",
+    highResolution
+      ? "High-resolution cover: ideal for 1080 × 1920 export."
+      : usableResolution
+        ? "Resolution is usable, but 1080 × 1920 is safer for quality."
+        : "Resolution is low; export a larger cover if possible."
+  );
+
+  setChecklistItem(
+    scoreSafeZone,
+    "pass",
+    state.showSafeZone ? "Safe zone overlay is active for text and logo placement." : "Safe zone is hidden; turn it on before final checking."
+  );
+
+  setChecklistItem(
+    scoreGrid,
+    "pass",
+    "Profile grid crop preview is ready for center visibility checking."
+  );
+}
+
+function resetCreatorScore() {
+  if (!creatorScoreValue || !scoreRatio || !scoreResolution || !scoreSafeZone || !scoreGrid) return;
+
+  creatorScoreValue.textContent = "--";
+  setChecklistItem(scoreRatio, "", "Upload an image to check 9:16 fit.");
+  setChecklistItem(scoreResolution, "", "Resolution check waiting.");
+  setChecklistItem(scoreSafeZone, "", "Safe zone guidance waiting.");
+  setChecklistItem(scoreGrid, "", "Grid crop preview waiting.");
+}
+
+function setChecklistItem(element, status, text) {
+  if (!element) return;
+  element.classList.remove("pass", "warn", "fail");
+  if (status) element.classList.add(status);
+  element.textContent = text;
 }
 
 function formatFileSize(bytes) {
@@ -524,8 +606,12 @@ const copySiteLinkBtn = document.getElementById("copySiteLinkBtn");
 
 platformButtons.forEach((button) => {
   button.addEventListener("click", () => {
-    platformButtons.forEach((btn) => btn.classList.remove("active"));
+    platformButtons.forEach((btn) => {
+      btn.classList.remove("active");
+      btn.setAttribute("aria-pressed", "false");
+    });
     button.classList.add("active");
+    button.setAttribute("aria-pressed", "true");
 
     const platform = button.dataset.platform;
 
@@ -610,6 +696,7 @@ function createTemplateCover(type) {
       };
 
       updateImageInfo(image, fakeFile);
+      updateCreatorScore(image, "good_9_16_fit");
       showToolControls();
       drawReelPreview();
       drawGridPreview();
