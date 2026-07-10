@@ -8,7 +8,11 @@ const state = {
   image: null,
   fileName: "",
   showSafeZone: true,
-  showGridPreview: true
+  showGridPreview: true,
+  cropZoom: 1,
+  cropOffsetX: 0,
+  cropOffsetY: 0,
+  isDragging: false
 };
 
 const imageInput = document.getElementById("imageInput");
@@ -18,6 +22,9 @@ const dimensionResult = document.getElementById("dimensionResult");
 const ratioResult = document.getElementById("ratioResult");
 const recommendationText = document.getElementById("recommendationText");
 const creatorScoreValue = document.getElementById("creatorScoreValue");
+const creatorScoreLabel = document.getElementById("creatorScoreLabel");
+const creatorScoreBar = document.getElementById("creatorScoreBar");
+const smartAdviceList = document.getElementById("smartAdviceList");
 const scoreRatio = document.getElementById("scoreRatio");
 const scoreResolution = document.getElementById("scoreResolution");
 const scoreSafeZone = document.getElementById("scoreSafeZone");
@@ -36,6 +43,9 @@ const toggleSafeBtn = document.getElementById("toggleSafeBtn");
 const toggleGridBtn = document.getElementById("toggleGridBtn");
 const downloadBtn = document.getElementById("downloadBtn");
 const resetBtn = document.getElementById("resetBtn");
+const zoomRange = document.getElementById("zoomRange");
+const zoomValue = document.getElementById("zoomValue");
+const resetCropBtn = document.getElementById("resetCropBtn");
 
 function trackEvent(eventName, eventParams = {}) {
   if (typeof window.gtag === "function") {
@@ -108,6 +118,7 @@ if (toggleSafeBtn) {
     toggleSafeBtn.textContent = state.showSafeZone ? "Hide Safe Zone" : "Show Safe Zone";
     toggleSafeBtn.setAttribute("aria-pressed", state.showSafeZone ? "true" : "false");
     drawReelPreview();
+    refreshCreatorScore();
     trackEvent("safe_zone_toggle", {
       safe_zone_visible: state.showSafeZone ? "yes" : "no"
     });
@@ -120,6 +131,7 @@ if (toggleGridBtn && gridPreviewCard) {
     toggleGridBtn.textContent = state.showGridPreview ? "Hide Grid Preview" : "Show Grid Preview";
     toggleGridBtn.setAttribute("aria-pressed", state.showGridPreview ? "true" : "false");
     gridPreviewCard.style.display = state.showGridPreview ? "block" : "none";
+    refreshCreatorScore();
     trackEvent("grid_preview_toggle", {
       grid_preview_visible: state.showGridPreview ? "yes" : "no"
     });
@@ -133,6 +145,8 @@ if (downloadBtn) {
 if (resetBtn) {
   resetBtn.addEventListener("click", resetTool);
 }
+
+setupCropControls();
 
 function handleImageFile(file, uploadMethod = "unknown") {
   trackEvent("image_upload", {
@@ -165,6 +179,7 @@ function handleImageFile(file, uploadMethod = "unknown") {
     state.fileName = file.name;
     state.showSafeZone = true;
     state.showGridPreview = true;
+    resetCrop(false);
 
     const ratioStatus = updateImageInfo(image, file);
     updateCreatorScore(image, ratioStatus);
@@ -172,7 +187,7 @@ function handleImageFile(file, uploadMethod = "unknown") {
     drawReelPreview();
     drawGridPreview();
 
-    setStatus("Image loaded successfully. Check the preview and safe zones.", "success");
+    setStatus("Image loaded. Drag inside the Reel preview to position it, then adjust zoom if needed.", "success");
 
     trackEvent("cover_checked", {
       image_width: image.naturalWidth,
@@ -244,13 +259,19 @@ function showToolControls() {
   }
   if (downloadBtn) downloadBtn.disabled = false;
   if (resetBtn) resetBtn.disabled = false;
+  if (zoomRange) zoomRange.disabled = false;
+  if (resetCropBtn) resetCropBtn.disabled = false;
+  if (reelCanvas) {
+    reelCanvas.classList.add("crop-enabled");
+    reelCanvas.tabIndex = 0;
+  }
 }
 
 function drawReelPreview() {
   if (!state.image || !reelCtx || !reelCanvas) return;
 
   clearCanvas(reelCtx, reelCanvas);
-  drawImageCover(reelCtx, state.image, TARGET_WIDTH, TARGET_HEIGHT);
+  drawImageWithCrop(reelCtx, state.image, TARGET_WIDTH, TARGET_HEIGHT);
 
   if (state.showSafeZone) {
     drawSafeZoneOverlay(reelCtx);
@@ -267,7 +288,7 @@ function drawGridPreview() {
   tempCanvas.height = TARGET_HEIGHT;
 
   const tempCtx = tempCanvas.getContext("2d");
-  drawImageCover(tempCtx, state.image, TARGET_WIDTH, TARGET_HEIGHT);
+  drawImageWithCrop(tempCtx, state.image, TARGET_WIDTH, TARGET_HEIGHT);
 
   const squareSize = TARGET_WIDTH;
   const sourceX = 0;
@@ -288,38 +309,32 @@ function drawGridPreview() {
   drawGridOverlay(gridCtx);
 }
 
-function drawImageCover(ctx, image, canvasWidth, canvasHeight) {
-  const imageRatio = image.naturalWidth / image.naturalHeight;
-  const canvasRatio = canvasWidth / canvasHeight;
-
-  let sourceWidth;
-  let sourceHeight;
-  let sourceX;
-  let sourceY;
-
-  if (imageRatio > canvasRatio) {
-    sourceHeight = image.naturalHeight;
-    sourceWidth = sourceHeight * canvasRatio;
-    sourceX = (image.naturalWidth - sourceWidth) / 2;
-    sourceY = 0;
-  } else {
-    sourceWidth = image.naturalWidth;
-    sourceHeight = sourceWidth / canvasRatio;
-    sourceX = 0;
-    sourceY = (image.naturalHeight - sourceHeight) / 2;
-  }
-
-  ctx.drawImage(
-    image,
-    sourceX,
-    sourceY,
-    sourceWidth,
-    sourceHeight,
-    0,
-    0,
-    canvasWidth,
-    canvasHeight
+function getCropGeometry(image, canvasWidth, canvasHeight) {
+  const baseScale = Math.max(
+    canvasWidth / image.naturalWidth,
+    canvasHeight / image.naturalHeight
   );
+  const scale = baseScale * state.cropZoom;
+  const drawWidth = image.naturalWidth * scale;
+  const drawHeight = image.naturalHeight * scale;
+
+  const maxOffsetX = Math.max(0, (drawWidth - canvasWidth) / 2);
+  const maxOffsetY = Math.max(0, (drawHeight - canvasHeight) / 2);
+
+  state.cropOffsetX = clamp(state.cropOffsetX, -maxOffsetX, maxOffsetX);
+  state.cropOffsetY = clamp(state.cropOffsetY, -maxOffsetY, maxOffsetY);
+
+  return {
+    x: (canvasWidth - drawWidth) / 2 + state.cropOffsetX,
+    y: (canvasHeight - drawHeight) / 2 + state.cropOffsetY,
+    width: drawWidth,
+    height: drawHeight
+  };
+}
+
+function drawImageWithCrop(ctx, image, canvasWidth, canvasHeight) {
+  const crop = getCropGeometry(image, canvasWidth, canvasHeight);
+  ctx.drawImage(image, crop.x, crop.y, crop.width, crop.height);
 }
 
 function drawSafeZoneOverlay(ctx) {
@@ -413,12 +428,24 @@ function downloadPreview() {
     const cleanName = state.fileName.replace(/\.[^/.]+$/, "").replace(/\s+/g, "-").toLowerCase();
     const objectUrl = URL.createObjectURL(blob);
 
+    if (downloadBtn) {
+      downloadBtn.disabled = true;
+      downloadBtn.textContent = "Downloading…";
+    }
+
     link.download = `${cleanName || "reelcoverfit"}-checked-preview.png`;
     link.href = objectUrl;
     link.click();
 
     window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
     setStatus("Preview downloaded successfully.", "success");
+    if (downloadBtn) {
+      downloadBtn.textContent = "Downloaded ✓";
+      window.setTimeout(() => {
+        downloadBtn.textContent = "Download Preview";
+        downloadBtn.disabled = false;
+      }, 1800);
+    }
     if (shareBox) {
   shareBox.hidden = false;
 }
@@ -435,6 +462,7 @@ function resetTool() {
   state.fileName = "";
   state.showSafeZone = true;
   state.showGridPreview = true;
+  resetCrop(false);
 
   if (imageInput) imageInput.value = "";
 
@@ -469,6 +497,9 @@ function resetTool() {
   }
   if (downloadBtn) downloadBtn.disabled = true;
   if (resetBtn) resetBtn.disabled = true;
+  if (zoomRange) zoomRange.disabled = true;
+  if (resetCropBtn) resetCropBtn.disabled = true;
+  if (reelCanvas) reelCanvas.classList.remove("crop-enabled", "is-dragging");
 
   setStatus("Upload an image to start checking.", "");
   trackEvent("tool_reset");
@@ -492,23 +523,54 @@ function setStatus(message, type) {
 function updateCreatorScore(image, ratioStatus) {
   if (!creatorScoreValue || !scoreRatio || !scoreResolution || !scoreSafeZone || !scoreGrid) return;
 
-  let score = 100;
   const width = image.naturalWidth;
   const height = image.naturalHeight;
+  let score = 100;
+  const advice = [];
 
-  if (ratioStatus !== "good_9_16_fit") score -= 22;
-  if (width < 720 || height < 1280) score -= 16;
-  else if (width < TARGET_WIDTH || height < TARGET_HEIGHT) score -= 7;
+  if (ratioStatus !== "good_9_16_fit") {
+    score -= 28;
+    advice.push(
+      ratioStatus === "too_wide"
+        ? "Crop the left and right sides or redesign on a 9:16 canvas."
+        : "Add side space or redesign on a 9:16 canvas so the cover does not look narrow."
+    );
+  }
 
-  score = Math.max(55, Math.min(100, score));
+  if (width < 720 || height < 1280) {
+    score -= 24;
+    advice.push("Export a larger image. Aim for 1080 × 1920 px for clearer results.");
+  } else if (width < TARGET_WIDTH || height < TARGET_HEIGHT) {
+    score -= 10;
+    advice.push("Your resolution is usable, but 1080 × 1920 px is safer for sharp output.");
+  }
+
+  if (!state.showSafeZone) {
+    score -= 6;
+    advice.push("Turn the safe-zone overlay on before your final check.");
+  }
+
+  if (!state.showGridPreview) {
+    score -= 6;
+    advice.push("Turn the grid preview on to confirm the center crop still works.");
+  }
+
+  score = Math.max(35, Math.min(100, score));
   creatorScoreValue.textContent = `${score}/100`;
+  if (creatorScoreBar) creatorScoreBar.style.width = `${score}%`;
+
+  const rating = getScoreRating(score);
+  if (creatorScoreLabel) {
+    creatorScoreLabel.textContent = `${rating.label} — ${rating.message}`;
+    creatorScoreLabel.dataset.rating = rating.key;
+  }
 
   setChecklistItem(
     scoreRatio,
     ratioStatus === "good_9_16_fit" ? "pass" : "warn",
     ratioStatus === "good_9_16_fit"
-      ? "9:16 fit looks good for Reel covers."
-      : "Aspect ratio needs attention; preview may crop important parts."
+      ? "Aspect ratio is close to 9:16."
+      : "Aspect ratio needs adjustment; some content may be cropped."
   );
 
   const highResolution = width >= TARGET_WIDTH && height >= TARGET_HEIGHT;
@@ -517,33 +579,88 @@ function updateCreatorScore(image, ratioStatus) {
     scoreResolution,
     highResolution ? "pass" : usableResolution ? "warn" : "fail",
     highResolution
-      ? "High-resolution cover: ideal for 1080 × 1920 export."
+      ? "Resolution meets the 1080 × 1920 recommendation."
       : usableResolution
-        ? "Resolution is usable, but 1080 × 1920 is safer for quality."
-        : "Resolution is low; export a larger cover if possible."
+        ? "Resolution is usable, but below the ideal export size."
+        : "Resolution is low and may look soft after posting."
   );
 
   setChecklistItem(
     scoreSafeZone,
-    "pass",
-    state.showSafeZone ? "Safe zone overlay is active for text and logo placement." : "Safe zone is hidden; turn it on before final checking."
+    state.showSafeZone ? "pass" : "warn",
+    state.showSafeZone
+      ? "Safe-zone overlay is visible for manual placement checking."
+      : "Safe-zone overlay is hidden."
   );
 
   setChecklistItem(
     scoreGrid,
-    "pass",
-    "Profile grid crop preview is ready for center visibility checking."
+    state.showGridPreview ? "pass" : "warn",
+    state.showGridPreview
+      ? "Profile grid crop preview is visible."
+      : "Profile grid crop preview is hidden."
   );
+
+  renderSmartAdvice(advice);
+}
+
+function getScoreRating(score) {
+  if (score >= 90) {
+    return { key: "excellent", label: "Excellent", message: "Technically ready for a final visual check." };
+  }
+  if (score >= 75) {
+    return { key: "good", label: "Good", message: "A few improvements can make it safer." };
+  }
+  if (score >= 55) {
+    return { key: "adjust", label: "Needs adjustment", message: "Fix the highlighted technical issues." };
+  }
+  return { key: "poor", label: "Not ready", message: "Use a larger 9:16 export before posting." };
+}
+
+function renderSmartAdvice(advice) {
+  if (!smartAdviceList) return;
+
+  const suggestions = advice.length
+    ? advice
+    : [
+        "Keep titles, faces, and logos inside the green safe-zone box.",
+        "Check the square profile crop before downloading."
+      ];
+
+  smartAdviceList.innerHTML = "";
+  suggestions.forEach((suggestion) => {
+    const item = document.createElement("li");
+    item.textContent = suggestion;
+    smartAdviceList.appendChild(item);
+  });
+}
+
+function refreshCreatorScore() {
+  if (!state.image) return;
+  const ratio = state.image.naturalWidth / state.image.naturalHeight;
+  const difference = Math.abs(ratio - TARGET_RATIO);
+  const ratioStatus = difference <= RATIO_TOLERANCE
+    ? "good_9_16_fit"
+    : ratio > TARGET_RATIO
+      ? "too_wide"
+      : "too_tall_or_narrow";
+  updateCreatorScore(state.image, ratioStatus);
 }
 
 function resetCreatorScore() {
   if (!creatorScoreValue || !scoreRatio || !scoreResolution || !scoreSafeZone || !scoreGrid) return;
 
   creatorScoreValue.textContent = "--";
+  if (creatorScoreBar) creatorScoreBar.style.width = "0%";
+  if (creatorScoreLabel) {
+    creatorScoreLabel.textContent = "Upload a cover to generate your report.";
+    delete creatorScoreLabel.dataset.rating;
+  }
   setChecklistItem(scoreRatio, "", "Upload an image to check 9:16 fit.");
   setChecklistItem(scoreResolution, "", "Resolution check waiting.");
   setChecklistItem(scoreSafeZone, "", "Safe zone guidance waiting.");
   setChecklistItem(scoreGrid, "", "Grid crop preview waiting.");
+  renderSmartAdvice(["Your personalized technical suggestions will appear here."]);
 }
 
 function setChecklistItem(element, status, text) {
@@ -576,6 +693,150 @@ function roundRect(ctx, x, y, width, height, radius) {
 }
 
 
+
+function setupCropControls() {
+  if (!reelCanvas) return;
+
+  const pointers = new Map();
+  let lastPointer = null;
+  let pinchStartDistance = 0;
+  let pinchStartZoom = 1;
+
+  if (zoomRange) {
+    zoomRange.addEventListener("input", () => {
+      if (!state.image) return;
+      setCropZoom(Number(zoomRange.value) / 100, true);
+    });
+  }
+
+  if (resetCropBtn) {
+    resetCropBtn.addEventListener("click", () => resetCrop(true));
+  }
+
+  reelCanvas.addEventListener("dblclick", () => {
+    if (state.image) resetCrop(true);
+  });
+
+  reelCanvas.addEventListener("wheel", (event) => {
+    if (!state.image) return;
+    event.preventDefault();
+    const step = event.deltaY < 0 ? 0.08 : -0.08;
+    setCropZoom(state.cropZoom + step, true);
+  }, { passive: false });
+
+  reelCanvas.addEventListener("pointerdown", (event) => {
+    if (!state.image) return;
+    reelCanvas.setPointerCapture(event.pointerId);
+    pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+
+    if (pointers.size === 1) {
+      state.isDragging = true;
+      lastPointer = { x: event.clientX, y: event.clientY };
+      reelCanvas.classList.add("is-dragging");
+    } else if (pointers.size === 2) {
+      const [a, b] = [...pointers.values()];
+      pinchStartDistance = Math.hypot(b.x - a.x, b.y - a.y);
+      pinchStartZoom = state.cropZoom;
+      state.isDragging = false;
+    }
+  });
+
+  reelCanvas.addEventListener("pointermove", (event) => {
+    if (!state.image || !pointers.has(event.pointerId)) return;
+    pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+
+    if (pointers.size === 2) {
+      const [a, b] = [...pointers.values()];
+      const distance = Math.hypot(b.x - a.x, b.y - a.y);
+      if (pinchStartDistance > 0) {
+        setCropZoom(pinchStartZoom * (distance / pinchStartDistance), false);
+        redrawCropPreviews();
+      }
+      return;
+    }
+
+    if (!state.isDragging || !lastPointer) return;
+    const rect = reelCanvas.getBoundingClientRect();
+    const scaleX = TARGET_WIDTH / rect.width;
+    const scaleY = TARGET_HEIGHT / rect.height;
+    state.cropOffsetX += (event.clientX - lastPointer.x) * scaleX;
+    state.cropOffsetY += (event.clientY - lastPointer.y) * scaleY;
+    lastPointer = { x: event.clientX, y: event.clientY };
+    redrawCropPreviews();
+  });
+
+  const endPointer = (event) => {
+    pointers.delete(event.pointerId);
+    if (pointers.size === 0) {
+      state.isDragging = false;
+      lastPointer = null;
+      reelCanvas.classList.remove("is-dragging");
+      trackEvent("crop_adjusted", {
+        zoom_percent: Math.round(state.cropZoom * 100),
+        offset_x: Math.round(state.cropOffsetX),
+        offset_y: Math.round(state.cropOffsetY)
+      });
+    } else if (pointers.size === 1) {
+      const point = [...pointers.values()][0];
+      state.isDragging = true;
+      lastPointer = { ...point };
+      reelCanvas.classList.add("is-dragging");
+    }
+  };
+
+  reelCanvas.addEventListener("pointerup", endPointer);
+  reelCanvas.addEventListener("pointercancel", endPointer);
+
+  reelCanvas.addEventListener("keydown", (event) => {
+    if (!state.image) return;
+    const amount = event.shiftKey ? 60 : 20;
+    let handled = true;
+    if (event.key === "ArrowLeft") state.cropOffsetX -= amount;
+    else if (event.key === "ArrowRight") state.cropOffsetX += amount;
+    else if (event.key === "ArrowUp") state.cropOffsetY -= amount;
+    else if (event.key === "ArrowDown") state.cropOffsetY += amount;
+    else if (event.key === "+" || event.key === "=") setCropZoom(state.cropZoom + 0.05, false);
+    else if (event.key === "-") setCropZoom(state.cropZoom - 0.05, false);
+    else if (event.key === "0") resetCrop(true);
+    else handled = false;
+
+    if (handled) {
+      event.preventDefault();
+      redrawCropPreviews();
+    }
+  });
+}
+
+function setCropZoom(nextZoom, shouldRedraw = true) {
+  state.cropZoom = clamp(nextZoom, 1, 3);
+  if (zoomRange) zoomRange.value = String(Math.round(state.cropZoom * 100));
+  if (zoomValue) zoomValue.textContent = `${Math.round(state.cropZoom * 100)}%`;
+  if (shouldRedraw) redrawCropPreviews();
+}
+
+function resetCrop(announce = false) {
+  state.cropZoom = 1;
+  state.cropOffsetX = 0;
+  state.cropOffsetY = 0;
+  if (zoomRange) zoomRange.value = "100";
+  if (zoomValue) zoomValue.textContent = "100%";
+  if (state.image) redrawCropPreviews();
+  if (announce) {
+    setStatus("Crop reset to the centered 9:16 view.", "success");
+    trackEvent("crop_reset");
+  }
+}
+
+function redrawCropPreviews() {
+  if (!state.image) return;
+  drawReelPreview();
+  drawGridPreview();
+}
+
+function clamp(value, min, max) {
+  return Math.min(max, Math.max(min, value));
+}
+
 // scroll_depth_tracking
 const scrollDepthState = {
   25: false,
@@ -600,7 +861,6 @@ window.addEventListener("scroll", () => {
 }, { passive: true });
 
 const platformButtons = document.querySelectorAll(".platform-btn");
-const templateButtons = document.querySelectorAll(".template-btn");
 const shareBox = document.getElementById("shareBox");
 const copySiteLinkBtn = document.getElementById("copySiteLinkBtn");
 
@@ -624,11 +884,6 @@ platformButtons.forEach((button) => {
   });
 });
 
-templateButtons.forEach((button) => {
-  button.addEventListener("click", () => {
-    createTemplateCover(button.dataset.template);
-  });
-});
 
 if (copySiteLinkBtn) {
   copySiteLinkBtn.addEventListener("click", async () => {
@@ -640,98 +895,4 @@ if (copySiteLinkBtn) {
       setStatus("Copy failed. Manually copy reelcoverfit.com", "warning");
     }
   });
-}
-
-function createTemplateCover(type) {
-  const templateCanvas = document.createElement("canvas");
-  templateCanvas.width = TARGET_WIDTH;
-  templateCanvas.height = TARGET_HEIGHT;
-
-  const ctx = templateCanvas.getContext("2d");
-  const gradient = ctx.createLinearGradient(0, 0, TARGET_WIDTH, TARGET_HEIGHT);
-
-  const themes = {
-    minimal: ["#f8fafc", "#e2e8f0", "#0f172a", "MINIMAL COVER"],
-    bold: ["#111827", "#9333ea", "#ffffff", "BOLD REEL COVER"],
-    fitness: ["#020617", "#ef4444", "#ffffff", "FITNESS TRANSFORMATION"],
-    food: ["#f97316", "#facc15", "#111827", "FOOD RECIPE"],
-    business: ["#0f172a", "#2563eb", "#ffffff", "BUSINESS TIPS"],
-    travel: ["#06b6d4", "#22c55e", "#ffffff", "TRAVEL VLOG"]
-  };
-
-  const selectedTheme = themes[type] || themes.bold;
-
-  gradient.addColorStop(0, selectedTheme[0]);
-  gradient.addColorStop(1, selectedTheme[1]);
-
-  ctx.fillStyle = gradient;
-  ctx.fillRect(0, 0, TARGET_WIDTH, TARGET_HEIGHT);
-
-  ctx.fillStyle = selectedTheme[2];
-  ctx.textAlign = "center";
-
-  ctx.font = "900 86px Arial, sans-serif";
-  wrapText(ctx, selectedTheme[3], TARGET_WIDTH / 2, 820, 820, 100);
-
-  ctx.font = "700 38px Arial, sans-serif";
-  ctx.fillText("Made with ReelCoverFit", TARGET_WIDTH / 2, 1040);
-
-  templateCanvas.toBlob((blob) => {
-    if (!blob) return;
-
-    const imageUrl = URL.createObjectURL(blob);
-    const image = new Image();
-
-    image.onload = () => {
-      URL.revokeObjectURL(imageUrl);
-
-      state.image = image;
-      state.fileName = `${type}-template.png`;
-      state.showSafeZone = true;
-      state.showGridPreview = true;
-
-      const fakeFile = {
-        name: state.fileName,
-        size: blob.size
-      };
-
-      updateImageInfo(image, fakeFile);
-      updateCreatorScore(image, "good_9_16_fit");
-      showToolControls();
-      drawReelPreview();
-      drawGridPreview();
-
-      setStatus(`${capitalize(type)} template applied. You can download the preview.`, "success");
-
-      trackEvent("template_selected", {
-        template: type
-      });
-    };
-
-    image.src = imageUrl;
-  }, "image/png");
-}
-
-function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
-  const words = text.split(" ");
-  let line = "";
-
-  for (let i = 0; i < words.length; i++) {
-    const testLine = line + words[i] + " ";
-    const metrics = ctx.measureText(testLine);
-
-    if (metrics.width > maxWidth && i > 0) {
-      ctx.fillText(line, x, y);
-      line = words[i] + " ";
-      y += lineHeight;
-    } else {
-      line = testLine;
-    }
-  }
-
-  ctx.fillText(line, x, y);
-}
-
-function capitalize(text) {
-  return text.charAt(0).toUpperCase() + text.slice(1);
 }
