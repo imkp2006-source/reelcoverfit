@@ -220,38 +220,64 @@
             <div id="creatorScoreCard" class="creator-score-card" aria-live="polite">
               <div class="creator-score-top">
                 <div>
-                  <span class="result-label">Creator readiness</span>
-                  <h3>Reel Cover Score</h3>
+                  <span class="result-label">Technical readiness</span>
+                  <h3>Creator Report</h3>
+                  <p id="creatorScoreLabel" class="creator-score-label">Upload a cover to generate your report.</p>
                 </div>
                 <strong id="creatorScoreValue" class="creator-score-value">--</strong>
               </div>
-              <ul class="creator-checklist" aria-label="Reel cover quality checklist">
+
+              <div class="score-meter" aria-hidden="true">
+                <span id="creatorScoreBar"></span>
+              </div>
+
+              <ul class="creator-checklist" aria-label="Reel cover technical checklist">
                 <li id="scoreRatio">Upload an image to check 9:16 fit.</li>
                 <li id="scoreResolution">Resolution check waiting.</li>
                 <li id="scoreSafeZone">Safe zone guidance waiting.</li>
                 <li id="scoreGrid">Grid crop preview waiting.</li>
               </ul>
+
+              <div class="smart-advice" aria-labelledby="smartAdviceTitle">
+                <h4 id="smartAdviceTitle">What to improve</h4>
+                <ul id="smartAdviceList">
+                  <li>Your personalized technical suggestions will appear here.</li>
+                </ul>
+              </div>
+
+              <p class="score-disclaimer">This score checks dimensions, aspect ratio, resolution, and preview settings. It does not detect text, faces, or design quality yet.</p>
+            </div>
+
+            <div id="cropStudio" class="crop-studio" aria-labelledby="cropStudioTitle">
+              <div class="crop-studio-header">
+                <div>
+                  <span class="result-label">Manual crop</span>
+                  <h3 id="cropStudioTitle">Position your cover</h3>
+                </div>
+                <span id="zoomValue" class="crop-zoom-value">100%</span>
+              </div>
+
+              <p class="small-text">Upload an image, then drag it directly inside the 9:16 preview. Use the slider or mouse wheel to zoom.</p>
+
+              <label class="crop-label" for="zoomRange">Zoom</label>
+              <input id="zoomRange" class="crop-range" type="range" min="100" max="300" value="100" step="1" disabled />
+
+              <div class="crop-actions">
+                <button id="resetCropBtn" class="btn btn-secondary" type="button" disabled>Reset Crop</button>
+                <span class="crop-hint">Drag on the Reel preview • Double-click to reset</span>
+              </div>
             </div>
 
             <div class="creator-tools-box">
-  <h3>Choose Platform</h3>
-  <div class="platform-tabs">
-    <button type="button" class="platform-btn active" data-platform="Instagram Reels" aria-pressed="true">Instagram Reels</button>
-    <button type="button" class="platform-btn" data-platform="YouTube Shorts" aria-pressed="false">YouTube Shorts</button>
-    <button type="button" class="platform-btn" data-platform="TikTok" aria-pressed="false">TikTok</button>
-    <button type="button" class="platform-btn" data-platform="Facebook Reels" aria-pressed="false">Facebook Reels</button>
-  </div>
-
-  <h3>Try a Ready Template</h3>
-  <div class="template-grid">
-    <button type="button" class="template-btn" data-template="minimal">Minimal</button>
-    <button type="button" class="template-btn" data-template="bold">Bold</button>
-    <button type="button" class="template-btn" data-template="fitness">Fitness</button>
-    <button type="button" class="template-btn" data-template="food">Food</button>
-    <button type="button" class="template-btn" data-template="business">Business</button>
-    <button type="button" class="template-btn" data-template="travel">Travel</button>
-  </div>
-</div>
+              <h3>Choose Platform</h3>
+              <p class="small-text">Switch guidance for the vertical platform you are preparing the cover for.</p>
+              <div class="platform-tabs">
+                <button type="button" class="platform-btn active" data-platform="Instagram Reels" aria-pressed="true">Instagram Reels</button>
+                <button type="button" class="platform-btn" data-platform="YouTube Shorts" aria-pressed="false">YouTube Shorts</button>
+                <button type="button" class="platform-btn" data-platform="TikTok" aria-pressed="false">TikTok</button>
+                <button type="button" class="platform-btn" data-platform="Facebook Reels" aria-pressed="false">Facebook Reels</button>
+              </div>
+            </div>
 
 <div id="shareBox" class="share-box" hidden>
   <h3>Preview downloaded 🎉</h3>
@@ -287,7 +313,7 @@
                   id="reelCanvas"
                   width="1080"
                   height="1920"
-                  aria-label="Reel cover preview canvas"
+                  aria-label="Interactive Reel cover crop preview. Drag to reposition the image."
                 ></canvas>
                 <div id="emptyPreview" class="empty-preview">
                   Your preview will appear here
