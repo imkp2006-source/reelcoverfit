@@ -12,7 +12,10 @@ const state = {
   cropZoom: 1,
   cropOffsetX: 0,
   cropOffsetY: 0,
-  isDragging: false
+  isDragging: false,
+  showRuleOfThirds: true,
+  showFaceGuide: true,
+  snapToCenter: true
 };
 
 const imageInput = document.getElementById("imageInput");
@@ -46,6 +49,9 @@ const resetBtn = document.getElementById("resetBtn");
 const zoomRange = document.getElementById("zoomRange");
 const zoomValue = document.getElementById("zoomValue");
 const resetCropBtn = document.getElementById("resetCropBtn");
+const toggleThirdsBtn = document.getElementById("toggleThirdsBtn");
+const toggleFaceGuideBtn = document.getElementById("toggleFaceGuideBtn");
+const toggleSnapBtn = document.getElementById("toggleSnapBtn");
 
 function trackEvent(eventName, eventParams = {}) {
   if (typeof window.gtag === "function") {
@@ -261,6 +267,9 @@ function showToolControls() {
   if (resetBtn) resetBtn.disabled = false;
   if (zoomRange) zoomRange.disabled = false;
   if (resetCropBtn) resetCropBtn.disabled = false;
+  if (toggleThirdsBtn) toggleThirdsBtn.disabled = false;
+  if (toggleFaceGuideBtn) toggleFaceGuideBtn.disabled = false;
+  if (toggleSnapBtn) toggleSnapBtn.disabled = false;
   if (reelCanvas) {
     reelCanvas.classList.add("crop-enabled");
     reelCanvas.tabIndex = 0;
@@ -276,6 +285,8 @@ function drawReelPreview() {
   if (state.showSafeZone) {
     drawSafeZoneOverlay(reelCtx);
   }
+
+  drawCreatorOverlays(reelCtx);
 }
 
 function drawGridPreview() {
@@ -323,6 +334,12 @@ function getCropGeometry(image, canvasWidth, canvasHeight) {
 
   state.cropOffsetX = clamp(state.cropOffsetX, -maxOffsetX, maxOffsetX);
   state.cropOffsetY = clamp(state.cropOffsetY, -maxOffsetY, maxOffsetY);
+
+  if (state.snapToCenter) {
+    const snapThreshold = 28;
+    if (Math.abs(state.cropOffsetX) < snapThreshold) state.cropOffsetX = 0;
+    if (Math.abs(state.cropOffsetY) < snapThreshold) state.cropOffsetY = 0;
+  }
 
   return {
     x: (canvasWidth - drawWidth) / 2 + state.cropOffsetX,
@@ -380,6 +397,68 @@ function drawSafeZoneOverlay(ctx) {
   ctx.restore();
 }
 
+
+function drawCreatorOverlays(ctx) {
+  ctx.save();
+
+  if (state.showRuleOfThirds) {
+    ctx.strokeStyle = "rgba(255,255,255,.72)";
+    ctx.lineWidth = 3;
+    ctx.setLineDash([16, 14]);
+    ctx.beginPath();
+    ctx.moveTo(TARGET_WIDTH / 3, 0);
+    ctx.lineTo(TARGET_WIDTH / 3, TARGET_HEIGHT);
+    ctx.moveTo((TARGET_WIDTH / 3) * 2, 0);
+    ctx.lineTo((TARGET_WIDTH / 3) * 2, TARGET_HEIGHT);
+    ctx.moveTo(0, TARGET_HEIGHT / 3);
+    ctx.lineTo(TARGET_WIDTH, TARGET_HEIGHT / 3);
+    ctx.moveTo(0, (TARGET_HEIGHT / 3) * 2);
+    ctx.lineTo(TARGET_WIDTH, (TARGET_HEIGHT / 3) * 2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  if (state.showFaceGuide) {
+    const centerX = TARGET_WIDTH / 2;
+    const centerY = TARGET_HEIGHT * 0.38;
+    const radiusX = 190;
+    const radiusY = 245;
+
+    ctx.strokeStyle = "rgba(250,204,21,.95)";
+    ctx.lineWidth = 7;
+    ctx.setLineDash([24, 16]);
+    ctx.beginPath();
+    ctx.ellipse(centerX, centerY, radiusX, radiusY, 0, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    ctx.fillStyle = "rgba(15,23,42,.78)";
+    ctx.fillRect(centerX - 150, centerY - radiusY - 72, 300, 52);
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "700 28px Arial, sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("Recommended face area", centerX, centerY - radiusY - 36);
+  }
+
+  if (state.snapToCenter && state.cropOffsetX === 0 && state.cropOffsetY === 0) {
+    ctx.strokeStyle = "rgba(34,197,94,.95)";
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.moveTo(TARGET_WIDTH / 2, 0);
+    ctx.lineTo(TARGET_WIDTH / 2, TARGET_HEIGHT);
+    ctx.stroke();
+
+    ctx.fillStyle = "rgba(22,163,74,.92)";
+    ctx.fillRect(TARGET_WIDTH / 2 - 92, TARGET_HEIGHT / 2 - 28, 184, 56);
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "700 28px Arial, sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("Centered", TARGET_WIDTH / 2, TARGET_HEIGHT / 2 + 10);
+  }
+
+  ctx.restore();
+}
+
 function drawGridOverlay(ctx) {
   if (!gridCanvas) return;
 
@@ -415,12 +494,16 @@ function downloadPreview() {
     return;
   }
 
+  downloadBtn.disabled = true;
+  downloadBtn.textContent = "Preparing Download…";
   drawReelPreview();
 
   reelCanvas.toBlob((blob) => {
     if (!blob) {
       setStatus("Could not create the preview image. Please try again.", "error");
       trackEvent("cover_download_error", { error_reason: "blob_failed" });
+      downloadBtn.disabled = false;
+      downloadBtn.textContent = "Download Instagram-Ready Cover";
       return;
     }
 
@@ -450,9 +533,17 @@ function downloadPreview() {
   shareBox.hidden = false;
 }
 
+    downloadBtn.textContent = "Downloaded ✓";
+    window.setTimeout(() => {
+      downloadBtn.disabled = false;
+      downloadBtn.textContent = "Download Instagram-Ready Cover";
+    }, 1800);
+
     trackEvent("cover_download", {
       file_name_length: state.fileName.length,
-      safe_zone_visible: state.showSafeZone ? "yes" : "no"
+      safe_zone_visible: state.showSafeZone ? "yes" : "no",
+      rule_of_thirds_visible: state.showRuleOfThirds ? "yes" : "no",
+      face_guide_visible: state.showFaceGuide ? "yes" : "no"
     });
   }, "image/png");
 }
@@ -499,6 +590,12 @@ function resetTool() {
   if (resetBtn) resetBtn.disabled = true;
   if (zoomRange) zoomRange.disabled = true;
   if (resetCropBtn) resetCropBtn.disabled = true;
+  [toggleThirdsBtn, toggleFaceGuideBtn, toggleSnapBtn].forEach((button) => {
+    if (!button) return;
+    button.disabled = true;
+    button.classList.add("active");
+    button.setAttribute("aria-pressed", "true");
+  });
   if (reelCanvas) reelCanvas.classList.remove("crop-enabled", "is-dragging");
 
   setStatus("Upload an image to start checking.", "");
@@ -694,6 +791,22 @@ function roundRect(ctx, x, y, width, height, radius) {
 
 
 
+
+function setupOverlayToggle(button, stateKey, eventName) {
+  if (!button) return;
+
+  button.addEventListener("click", () => {
+    state[stateKey] = !state[stateKey];
+    button.classList.toggle("active", state[stateKey]);
+    button.setAttribute("aria-pressed", state[stateKey] ? "true" : "false");
+    redrawCropPreviews();
+
+    trackEvent(eventName, {
+      enabled: state[stateKey] ? "yes" : "no"
+    });
+  });
+}
+
 function setupCropControls() {
   if (!reelCanvas) return;
 
@@ -712,6 +825,10 @@ function setupCropControls() {
   if (resetCropBtn) {
     resetCropBtn.addEventListener("click", () => resetCrop(true));
   }
+
+  setupOverlayToggle(toggleThirdsBtn, "showRuleOfThirds", "rule_of_thirds_toggle");
+  setupOverlayToggle(toggleFaceGuideBtn, "showFaceGuide", "face_guide_toggle");
+  setupOverlayToggle(toggleSnapBtn, "snapToCenter", "snap_to_center_toggle");
 
   reelCanvas.addEventListener("dblclick", () => {
     if (state.image) resetCrop(true);
