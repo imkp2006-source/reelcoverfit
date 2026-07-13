@@ -248,6 +248,28 @@
               <p class="score-disclaimer">This score checks dimensions, aspect ratio, resolution, and preview settings. It does not detect text, faces, or design quality yet.</p>
             </div>
 
+            <section id="thumbnailAnalyzer" class="thumbnail-analyzer" aria-labelledby="thumbnailAnalyzerTitle" aria-live="polite">
+              <div class="analyzer-head">
+                <div>
+                  <span class="result-label">Rule-based cover analysis</span>
+                  <h3 id="thumbnailAnalyzerTitle">Thumbnail Analyzer</h3>
+                  <p id="analyzerSummary">Upload a cover to analyze its technical visual quality.</p>
+                </div>
+                <div class="analyzer-overall"><strong id="analyzerOverall">--</strong><span>/100</span></div>
+              </div>
+              <div class="analyzer-meter" aria-hidden="true"><span id="analyzerOverallBar"></span></div>
+              <div class="analyzer-metrics">
+                <article><span>Contrast</span><strong id="metricContrast">--</strong><small id="metricContrastNote">Waiting</small></article>
+                <article><span>Brightness</span><strong id="metricBrightness">--</strong><small id="metricBrightnessNote">Waiting</small></article>
+                <article><span>Sharpness</span><strong id="metricSharpness">--</strong><small id="metricSharpnessNote">Waiting</small></article>
+                <article><span>Resolution</span><strong id="metricResolution">--</strong><small id="metricResolutionNote">Waiting</small></article>
+                <article><span>Crop balance</span><strong id="metricCrop">--</strong><small id="metricCropNote">Waiting</small></article>
+                <article><span>Safe setup</span><strong id="metricSafety">--</strong><small id="metricSafetyNote">Waiting</small></article>
+              </div>
+              <div class="analyzer-suggestions"><strong>Smart suggestions</strong><ul id="analyzerSuggestions"><li>Your suggestions will appear here.</li></ul></div>
+              <p class="analyzer-disclaimer">This analyzer estimates pixel-level technical quality. It does not detect text, faces, emotions, or predict actual engagement.</p>
+            </section>
+
             <div id="cropStudio" class="crop-studio" aria-labelledby="cropStudioTitle">
               <div class="crop-studio-header">
                 <div>

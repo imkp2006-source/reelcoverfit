@@ -52,6 +52,19 @@ const resetCropBtn = document.getElementById("resetCropBtn");
 const toggleThirdsBtn = document.getElementById("toggleThirdsBtn");
 const toggleFaceGuideBtn = document.getElementById("toggleFaceGuideBtn");
 const toggleSnapBtn = document.getElementById("toggleSnapBtn");
+const thumbnailAnalyzer = document.getElementById("thumbnailAnalyzer");
+const analyzerSummary = document.getElementById("analyzerSummary");
+const analyzerOverall = document.getElementById("analyzerOverall");
+const analyzerOverallBar = document.getElementById("analyzerOverallBar");
+const analyzerSuggestions = document.getElementById("analyzerSuggestions");
+const analyzerMetrics = {
+  contrast: [document.getElementById("metricContrast"), document.getElementById("metricContrastNote")],
+  brightness: [document.getElementById("metricBrightness"), document.getElementById("metricBrightnessNote")],
+  sharpness: [document.getElementById("metricSharpness"), document.getElementById("metricSharpnessNote")],
+  resolution: [document.getElementById("metricResolution"), document.getElementById("metricResolutionNote")],
+  crop: [document.getElementById("metricCrop"), document.getElementById("metricCropNote")],
+  safety: [document.getElementById("metricSafety"), document.getElementById("metricSafetyNote")]
+};
 
 function trackEvent(eventName, eventParams = {}) {
   if (typeof window.gtag === "function") {
@@ -125,6 +138,7 @@ if (toggleSafeBtn) {
     toggleSafeBtn.setAttribute("aria-pressed", state.showSafeZone ? "true" : "false");
     drawReelPreview();
     refreshCreatorScore();
+    updateThumbnailAnalyzer();
     trackEvent("safe_zone_toggle", {
       safe_zone_visible: state.showSafeZone ? "yes" : "no"
     });
@@ -138,6 +152,7 @@ if (toggleGridBtn && gridPreviewCard) {
     toggleGridBtn.setAttribute("aria-pressed", state.showGridPreview ? "true" : "false");
     gridPreviewCard.style.display = state.showGridPreview ? "block" : "none";
     refreshCreatorScore();
+    updateThumbnailAnalyzer();
     trackEvent("grid_preview_toggle", {
       grid_preview_visible: state.showGridPreview ? "yes" : "no"
     });
@@ -189,6 +204,7 @@ function handleImageFile(file, uploadMethod = "unknown") {
 
     const ratioStatus = updateImageInfo(image, file);
     updateCreatorScore(image, ratioStatus);
+    updateThumbnailAnalyzer();
     showToolControls();
     drawReelPreview();
     drawGridPreview();
@@ -577,6 +593,7 @@ function resetTool() {
   }
 
   resetCreatorScore();
+  resetThumbnailAnalyzer();
 
   if (toggleSafeBtn) {
     toggleSafeBtn.disabled = true;
@@ -615,6 +632,138 @@ function setStatus(message, type) {
   if (type) {
     statusMessage.classList.add(type);
   }
+}
+
+function updateThumbnailAnalyzer() {
+  if (!state.image || !analyzerOverall) return;
+
+  const metrics = analyzeCurrentCrop();
+  const width = state.image.naturalWidth;
+  const height = state.image.naturalHeight;
+  const contrastScore = normalizeScore(metrics.contrast, 18, 72);
+  const brightnessScore = Math.max(0, 100 - Math.abs(metrics.meanBrightness - 135) * 0.85);
+  const sharpnessScore = normalizeScore(metrics.sharpness, 5, 28);
+  const resolutionScore = Math.min(100, Math.round(Math.min(width / TARGET_WIDTH, height / TARGET_HEIGHT) * 100));
+  const cropDistance = Math.min(1, Math.hypot(state.cropOffsetX, state.cropOffsetY) / 650);
+  const cropScore = Math.max(45, Math.round(100 - cropDistance * 38 - (state.cropZoom - 1) * 18));
+  const safetyScore = Math.round((state.showSafeZone ? 45 : 15) + (state.showGridPreview ? 30 : 10) + (state.showRuleOfThirds ? 15 : 5) + (state.showFaceGuide ? 10 : 4));
+
+  const overall = Math.round(
+    contrastScore * 0.22 +
+    brightnessScore * 0.16 +
+    sharpnessScore * 0.22 +
+    resolutionScore * 0.18 +
+    cropScore * 0.12 +
+    safetyScore * 0.10
+  );
+
+  analyzerOverall.textContent = String(overall);
+  if (analyzerOverallBar) analyzerOverallBar.style.width = `${overall}%`;
+  if (analyzerSummary) {
+    analyzerSummary.textContent = overall >= 88 ? "Strong technical cover quality." : overall >= 72 ? "Good base with a few improvements available." : overall >= 55 ? "Usable, but review the suggestions below." : "The cover needs technical improvement.";
+  }
+
+  setAnalyzerMetric("contrast", contrastScore, contrastScore >= 75 ? "Strong tonal separation" : contrastScore >= 55 ? "Moderate contrast" : "Low contrast may reduce impact");
+  setAnalyzerMetric("brightness", brightnessScore, metrics.meanBrightness < 75 ? "Image appears dark" : metrics.meanBrightness > 205 ? "Highlights may be too bright" : "Brightness is balanced");
+  setAnalyzerMetric("sharpness", sharpnessScore, sharpnessScore >= 75 ? "Details look crisp" : sharpnessScore >= 50 ? "Acceptable detail" : "Image may look soft");
+  setAnalyzerMetric("resolution", resolutionScore, width >= TARGET_WIDTH && height >= TARGET_HEIGHT ? "Meets 1080 × 1920 recommendation" : `${width} × ${height}px source`);
+  setAnalyzerMetric("crop", cropScore, state.cropZoom > 1.8 ? "Heavy zoom may reduce clarity" : Math.abs(state.cropOffsetX) + Math.abs(state.cropOffsetY) < 80 ? "Composition stays near center" : "Manual crop is strongly offset");
+  setAnalyzerMetric("safety", safetyScore, state.showSafeZone && state.showGridPreview ? "Core previews are enabled" : "Turn overlays on for a complete check");
+
+  const suggestions = [];
+  if (contrastScore < 60) suggestions.push("Increase contrast or simplify the background so the subject stands out.");
+  if (metrics.meanBrightness < 75) suggestions.push("Brighten the cover slightly so it remains visible on small screens.");
+  if (metrics.meanBrightness > 205) suggestions.push("Reduce highlights to preserve detail in bright areas.");
+  if (sharpnessScore < 55) suggestions.push("Use a sharper, higher-quality source image.");
+  if (resolutionScore < 75) suggestions.push("Export at 1080 × 1920 px or higher for better clarity.");
+  if (state.cropZoom > 2) suggestions.push("Avoid excessive zoom because it can amplify blur and remove context.");
+  if (!state.showSafeZone) suggestions.push("Enable the safe-zone overlay before final export.");
+  if (!state.showGridPreview) suggestions.push("Enable the grid preview to confirm the center crop.");
+
+  if (analyzerSuggestions) {
+    analyzerSuggestions.innerHTML = "";
+    (suggestions.length ? suggestions : ["The cover passes the current pixel-level technical checks. Review title placement manually before posting."]).forEach((message) => {
+      const li = document.createElement("li");
+      li.textContent = message;
+      analyzerSuggestions.appendChild(li);
+    });
+  }
+
+}
+
+function analyzeCurrentCrop() {
+  const sampleCanvas = document.createElement("canvas");
+  sampleCanvas.width = 135;
+  sampleCanvas.height = 240;
+  const ctx = sampleCanvas.getContext("2d", { willReadFrequently: true });
+
+  const baseScale = Math.max(TARGET_WIDTH / state.image.naturalWidth, TARGET_HEIGHT / state.image.naturalHeight);
+  const scale = baseScale * state.cropZoom;
+  const fullWidth = state.image.naturalWidth * scale;
+  const fullHeight = state.image.naturalHeight * scale;
+  const drawX = (TARGET_WIDTH - fullWidth) / 2 + state.cropOffsetX;
+  const drawY = (TARGET_HEIGHT - fullHeight) / 2 + state.cropOffsetY;
+  const sx = -drawX / scale;
+  const sy = -drawY / scale;
+  const sw = TARGET_WIDTH / scale;
+  const sh = TARGET_HEIGHT / scale;
+
+  ctx.drawImage(state.image, sx, sy, sw, sh, 0, 0, sampleCanvas.width, sampleCanvas.height);
+  const { data } = ctx.getImageData(0, 0, sampleCanvas.width, sampleCanvas.height);
+  const luminance = new Float32Array(sampleCanvas.width * sampleCanvas.height);
+  let sum = 0;
+
+  for (let i = 0, p = 0; i < data.length; i += 4, p += 1) {
+    const value = 0.2126 * data[i] + 0.7152 * data[i + 1] + 0.0722 * data[i + 2];
+    luminance[p] = value;
+    sum += value;
+  }
+
+  const mean = sum / luminance.length;
+  let variance = 0;
+  let edges = 0;
+  let edgeCount = 0;
+
+  for (let y = 0; y < sampleCanvas.height; y += 1) {
+    for (let x = 0; x < sampleCanvas.width; x += 1) {
+      const index = y * sampleCanvas.width + x;
+      const value = luminance[index];
+      variance += (value - mean) ** 2;
+      if (x > 0 && y > 0) {
+        edges += Math.abs(value - luminance[index - 1]) + Math.abs(value - luminance[index - sampleCanvas.width]);
+        edgeCount += 2;
+      }
+    }
+  }
+
+  return {
+    meanBrightness: mean,
+    contrast: Math.sqrt(variance / luminance.length),
+    sharpness: edgeCount ? edges / edgeCount : 0
+  };
+}
+
+function normalizeScore(value, low, high) {
+  if (value <= low) return 35;
+  if (value >= high) return 100;
+  return 35 + ((value - low) / (high - low)) * 65;
+}
+
+function setAnalyzerMetric(key, score, note) {
+  const [valueElement, noteElement] = analyzerMetrics[key] || [];
+  if (valueElement) valueElement.textContent = `${Math.round(score)}/100`;
+  if (noteElement) noteElement.textContent = note;
+}
+
+function resetThumbnailAnalyzer() {
+  if (analyzerOverall) analyzerOverall.textContent = "--";
+  if (analyzerOverallBar) analyzerOverallBar.style.width = "0%";
+  if (analyzerSummary) analyzerSummary.textContent = "Upload a cover to analyze its technical visual quality.";
+  Object.values(analyzerMetrics).forEach(([valueElement, noteElement]) => {
+    if (valueElement) valueElement.textContent = "--";
+    if (noteElement) noteElement.textContent = "Waiting";
+  });
+  if (analyzerSuggestions) analyzerSuggestions.innerHTML = "<li>Your suggestions will appear here.</li>";
 }
 
 function updateCreatorScore(image, ratioStatus) {
@@ -948,6 +1097,7 @@ function redrawCropPreviews() {
   if (!state.image) return;
   drawReelPreview();
   drawGridPreview();
+  updateThumbnailAnalyzer();
 }
 
 function clamp(value, min, max) {
