@@ -1,7 +1,6 @@
-# ReelCoverFit v2.3
+# ReelCoverFit v2.4
 
-- Added a rule-based thumbnail analyzer.
-- Added technical scores for contrast, brightness, sharpness, resolution, crop balance, and safety setup.
-- Added actionable suggestions that update with crop and zoom changes.
-- Preserved manual cropping, creator overlays, safe-zone controls, profile-grid preview, and analytics.
-- The analyzer does not detect text/faces or predict real engagement.
+- Added synchronized previews for Instagram Reel, Profile Grid, Explore 4:5, YouTube Shorts, and TikTok.
+- Manual crop and zoom now update every preview.
+- Added platform-specific guidance and UI-safe overlays for Shorts and TikTok.
+- Preserved crop studio, creator report, thumbnail analyzer, keyboard controls, and analytics.

@@ -208,6 +208,7 @@ function handleImageFile(file, uploadMethod = "unknown") {
     showToolControls();
     drawReelPreview();
     drawGridPreview();
+    drawSurfacePreview();
 
     setStatus("Image loaded. Drag inside the Reel preview to position it, then adjust zoom if needed.", "success");
 
@@ -580,6 +581,8 @@ function resetTool() {
   if (gridCanvas) gridCanvas.style.display = "none";
   if (emptyPreview) emptyPreview.style.display = "block";
   if (emptyGridPreview) emptyGridPreview.style.display = "block";
+  if (surfaceCanvas) surfaceCanvas.style.display = "none";
+  if (emptySurfacePreview) emptySurfacePreview.style.display = "block";
   if (gridPreviewCard) gridPreviewCard.style.display = "block";
 
   if (dimensionResult) dimensionResult.textContent = "Not uploaded";
@@ -1097,6 +1100,7 @@ function redrawCropPreviews() {
   if (!state.image) return;
   drawReelPreview();
   drawGridPreview();
+  drawSurfacePreview();
   updateThumbnailAnalyzer();
 }
 
@@ -1163,3 +1167,74 @@ if (copySiteLinkBtn) {
     }
   });
 }
+
+
+// ReelCoverFit v2.4 — Multi-platform Preview Studio
+const surfaceCanvas = document.getElementById("surfaceCanvas");
+const surfaceCtx = surfaceCanvas ? surfaceCanvas.getContext("2d") : null;
+const emptySurfacePreview = document.getElementById("emptySurfacePreview");
+const surfaceTabs = document.querySelectorAll(".surface-tab");
+const surfacePreviewTag = document.getElementById("surfacePreviewTag");
+const surfacePreviewAdvice = document.getElementById("surfacePreviewAdvice");
+const surfaceCanvasWrap = document.getElementById("surfaceCanvasWrap");
+state.activeSurface = "instagram-reel";
+
+const surfaceConfig = {
+  "instagram-reel": { width:1080, height:1920, label:"Instagram Reel · 9:16", advice:"Check the full vertical cover and keep key content inside the safe area." },
+  "instagram-grid": { width:1080, height:1080, label:"Profile Grid · 1:1", advice:"This center crop shows what may remain visible on a square profile grid." },
+  "instagram-explore": { width:1080, height:1350, label:"Instagram Explore · 4:5", advice:"The 4:5 preview helps you protect titles and faces in portrait discovery surfaces." },
+  "youtube-shorts": { width:1080, height:1920, label:"YouTube Shorts · 9:16", advice:"Use the center area for titles because player controls can cover edge content." },
+  "tiktok": { width:1080, height:1920, label:"TikTok · 9:16", advice:"Keep text away from the right-side action rail and bottom caption area." }
+};
+
+function drawSurfacePreview() {
+  if (!state.image || !surfaceCtx || !surfaceCanvas) return;
+  const config = surfaceConfig[state.activeSurface] || surfaceConfig["instagram-reel"];
+  surfaceCanvas.width = config.width;
+  surfaceCanvas.height = config.height;
+  surfaceCtx.clearRect(0,0,config.width,config.height);
+
+  const temp = document.createElement("canvas");
+  temp.width = TARGET_WIDTH; temp.height = TARGET_HEIGHT;
+  const tempCtx = temp.getContext("2d");
+  drawImageWithCrop(tempCtx,state.image,TARGET_WIDTH,TARGET_HEIGHT);
+
+  const targetRatio = config.width/config.height;
+  const sourceRatio = TARGET_WIDTH/TARGET_HEIGHT;
+  let sx=0, sy=0, sw=TARGET_WIDTH, sh=TARGET_HEIGHT;
+  if (targetRatio > sourceRatio) { sh = TARGET_WIDTH/targetRatio; sy=(TARGET_HEIGHT-sh)/2; }
+  else if (targetRatio < sourceRatio) { sw = TARGET_HEIGHT*targetRatio; sx=(TARGET_WIDTH-sw)/2; }
+  surfaceCtx.drawImage(temp,sx,sy,sw,sh,0,0,config.width,config.height);
+
+  if (state.activeSurface === "tiktok") {
+    surfaceCtx.fillStyle="rgba(15,23,42,.42)";
+    surfaceCtx.fillRect(config.width-150,120,150,config.height-360);
+    surfaceCtx.fillRect(0,config.height-260,config.width,260);
+  }
+  if (state.activeSurface === "youtube-shorts") {
+    surfaceCtx.fillStyle="rgba(15,23,42,.34)";
+    surfaceCtx.fillRect(0,config.height-220,config.width,220);
+  }
+  surfaceCanvas.style.display="block";
+  if (emptySurfacePreview) emptySurfacePreview.style.display="none";
+  if (surfaceCanvasWrap) surfaceCanvasWrap.dataset.surface=state.activeSurface;
+  if (surfacePreviewTag) surfacePreviewTag.textContent=config.label;
+  if (surfacePreviewAdvice) surfacePreviewAdvice.textContent=config.advice;
+}
+
+surfaceTabs.forEach((button)=>button.addEventListener("click",()=>{
+  surfaceTabs.forEach((item)=>{item.classList.remove("active");item.setAttribute("aria-selected","false")});
+  button.classList.add("active"); button.setAttribute("aria-selected","true");
+  state.activeSurface=button.dataset.surface;
+  drawSurfacePreview();
+  trackEvent("surface_preview_selected",{surface:state.activeSurface});
+}));
+
+// Keep platform selector and preview studio aligned.
+platformButtons.forEach((button)=>button.addEventListener("click",()=>{
+  const platform=button.dataset.platform;
+  const map={"Instagram Reels":"instagram-reel","YouTube Shorts":"youtube-shorts","TikTok":"tiktok","Facebook Reels":"instagram-reel"};
+  const target=map[platform];
+  const tab=[...surfaceTabs].find((item)=>item.dataset.surface===target);
+  if(tab) tab.click();
+}));
