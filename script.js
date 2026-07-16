@@ -1238,3 +1238,29 @@ platformButtons.forEach((button)=>button.addEventListener("click",()=>{
   const tab=[...surfaceTabs].find((item)=>item.dataset.surface===target);
   if(tab) tab.click();
 }));
+
+
+// ReelCoverFit v2.4.1 — visual rating sync and refined preview feedback
+const creatorStars = document.getElementById('creatorStars');
+const creatorStatusBadge = document.getElementById('creatorStatusBadge');
+function syncCreatorVisualRating(){
+  if(!creatorScoreValue) return;
+  const score = Number((creatorScoreValue.textContent || '').replace(/[^0-9]/g,''));
+  if(!score){ if(creatorStars){creatorStars.textContent='☆☆☆☆☆';creatorStars.setAttribute('aria-label','Creator rating waiting');} if(creatorStatusBadge){creatorStatusBadge.textContent='Waiting';creatorStatusBadge.className='creator-status-badge waiting';} return; }
+  const starCount = Math.max(1,Math.min(5,Math.round(score/20)));
+  if(creatorStars){ creatorStars.textContent='★'.repeat(starCount)+'☆'.repeat(5-starCount); creatorStars.setAttribute('aria-label',`${starCount} out of 5 stars`); }
+  let label='Needs work', cls='poor';
+  if(score>=90){label='Excellent';cls='excellent'} else if(score>=75){label='Good';cls='good'} else if(score>=55){label='Adjust';cls='adjust'}
+  if(creatorStatusBadge){creatorStatusBadge.textContent=label;creatorStatusBadge.className=`creator-status-badge ${cls}`;}
+}
+const creatorScoreObserver = creatorScoreValue ? new MutationObserver(syncCreatorVisualRating) : null;
+creatorScoreObserver?.observe(creatorScoreValue,{childList:true,characterData:true,subtree:true});
+syncCreatorVisualRating();
+
+// Re-trigger a subtle canvas reveal when switching platform surfaces.
+document.querySelectorAll('.surface-tab').forEach(button => button.addEventListener('click',()=>{
+  if(!surfaceCanvas) return;
+  surfaceCanvas.style.animation='none';
+  void surfaceCanvas.offsetWidth;
+  surfaceCanvas.style.animation='surfaceReveal .22s ease';
+}));

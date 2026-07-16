@@ -193,8 +193,8 @@
 <h3>Creator Report</h3>
 <p class="creator-score-label" id="creatorScoreLabel">Upload a cover to generate your report.</p>
 </div>
-<strong class="creator-score-value" id="creatorScoreValue">--</strong>
-</div>
+
+<div class="creator-score-summary"><strong class="creator-score-value" id="creatorScoreValue">--</strong><div aria-label="Creator rating waiting" class="creator-stars" id="creatorStars">☆☆☆☆☆</div><span class="creator-status-badge waiting" id="creatorStatusBadge">Waiting</span></div></div>
 <div aria-hidden="true" class="score-meter">
 <span id="creatorScoreBar"></span>
 </div>
@@ -292,9 +292,7 @@
 </div>
 <div class="canvas-wrap">
 <canvas aria-label="Interactive Reel cover crop preview. Drag to reposition the image." height="1920" id="reelCanvas" width="1080"></canvas>
-<div class="empty-preview" id="emptyPreview">
-                  Your preview will appear here
-                </div>
+<div class="empty-preview" id="emptyPreview"><div class="premium-empty-state"><span aria-hidden="true" class="empty-state-icon">▣</span><strong>Drop your Reel cover</strong><p>We’ll check safe zones, crop balance, creator score, resolution, and thumbnail quality.</p><ul><li>Safe-zone preview</li><li>Manual crop &amp; zoom</li><li>Creator report</li><li>Multi-platform preview</li></ul></div></div>
 </div>
 </div>
 <div class="card grid-preview-card" id="gridPreviewCard">
@@ -309,19 +307,18 @@
                 </div>
 </div>
 </div>
-
 <div aria-labelledby="multiPreviewTitle" class="card multi-preview-card">
 <div class="preview-header"><div><span class="result-label">Synchronized crop</span><h3 id="multiPreviewTitle">Multi-platform preview</h3></div><span class="tag" id="surfacePreviewTag">Instagram Reel · 9:16</span></div>
 <div aria-label="Preview surface" class="surface-tabs" role="tablist">
-<button aria-selected="true" class="surface-tab active" data-surface="instagram-reel" role="tab" type="button">Reel</button>
-<button aria-selected="false" class="surface-tab" data-surface="instagram-grid" role="tab" type="button">Profile Grid</button>
-<button aria-selected="false" class="surface-tab" data-surface="instagram-explore" role="tab" type="button">Explore 4:5</button>
-<button aria-selected="false" class="surface-tab" data-surface="youtube-shorts" role="tab" type="button">Shorts</button>
-<button aria-selected="false" class="surface-tab" data-surface="tiktok" role="tab" type="button">TikTok</button>
+<button aria-selected="true" class="surface-tab active" data-surface="instagram-reel" role="tab" type="button">◉ Reel</button>
+<button aria-selected="false" class="surface-tab" data-surface="instagram-grid" role="tab" type="button">▦ Grid</button>
+<button aria-selected="false" class="surface-tab" data-surface="instagram-explore" role="tab" type="button">▯ Explore 4:5</button>
+<button aria-selected="false" class="surface-tab" data-surface="youtube-shorts" role="tab" type="button">▶ Shorts</button>
+<button aria-selected="false" class="surface-tab" data-surface="tiktok" role="tab" type="button">♪ TikTok</button>
 </div>
 <div class="surface-canvas-wrap" id="surfaceCanvasWrap">
 <canvas aria-label="Selected platform crop preview" height="1920" id="surfaceCanvas" width="1080"></canvas>
-<div class="empty-preview" id="emptySurfacePreview">Upload an image to compare platform previews</div>
+<div class="empty-preview" id="emptySurfacePreview">Upload once to compare the same crop across every platform.</div>
 </div>
 <p class="surface-preview-advice" id="surfacePreviewAdvice">Your manual crop and zoom stay synchronized across every preview.</p>
 </div>

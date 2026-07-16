@@ -1,6 +1,7 @@
-# ReelCoverFit v2.4
+# ReelCoverFit v2.4.1
 
-- Added synchronized previews for Instagram Reel, Profile Grid, Explore 4:5, YouTube Shorts, and TikTok.
-- Manual crop and zoom now update every preview.
-- Added platform-specific guidance and UI-safe overlays for Shorts and TikTok.
-- Preserved crop studio, creator report, thumbnail analyzer, keyboard controls, and analytics.
+- Redesigned Creator Report with stars and clear readiness badges.
+- Upgraded checklist cards and thumbnail analyzer presentation.
+- Added a richer upload empty state explaining the checks.
+- Polished multi-platform tabs and switching animation.
+- Preserved manual crop, zoom, overlays, analyzer, multi-preview, analytics and accessibility.
