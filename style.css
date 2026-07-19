@@ -1453,3 +1453,6 @@ button:focus-visible,
 @keyframes surfaceReveal { from{opacity:.45;transform:scale(.985)} to{opacity:1;transform:scale(1)} }
 @media(max-width:560px){ .creator-score-top{align-items:flex-start}.creator-score-summary{justify-items:start}.premium-empty-state ul{grid-template-columns:1fr}.surface-tabs{display:grid;grid-template-columns:1fr 1fr}.surface-tab{width:100%} }
 @media(prefers-reduced-motion:reduce){ #surfaceCanvas{animation:none}.surface-tab{transition:none} }
+
+/* Growth pages */
+.article-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:clamp(22px,4vw,36px);max-width:900px}.article-card h2{font-size:clamp(1.5rem,4vw,2.2rem);margin-bottom:14px}.article-card p,.article-card li{color:var(--muted)}.article-card li+li{margin-top:8px}.resource-grid{display:grid;gap:18px}.resource-card{padding:24px}.resource-card p{color:var(--muted)}.text-link{display:inline-flex;margin-top:8px;color:var(--primary);font-weight:850}@media(min-width:720px){.resource-grid{grid-template-columns:repeat(2,1fr)}}

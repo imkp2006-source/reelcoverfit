@@ -1,49 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-
-  <url>
-    <loc>https://reelcoverfit.com/</loc>
-    <priority>1.00</priority>
-  </url>
-
-  <url>
-    <loc>https://reelcoverfit.com/instagram-reel-cover-size.html</loc>
-    <priority>0.90</priority>
-  </url>
-
-  <url>
-    <loc>https://reelcoverfit.com/why-instagram-reel-cover-cropped.html</loc>
-    <priority>0.90</priority>
-  </url>
-
-  <url>
-    <loc>https://reelcoverfit.com/instagram-reel-thumbnail-safe-zone.html</loc>
-    <priority>0.85</priority>
-  </url>
-
-  <url>
-    <loc>https://reelcoverfit.com/canva-instagram-reel-cover-size.html</loc>
-    <priority>0.85</priority>
-  </url>
-
-  <url>
-    <loc>https://reelcoverfit.com/about.html</loc>
-    <priority>0.50</priority>
-  </url>
-
-  <url>
-    <loc>https://reelcoverfit.com/contact.html</loc>
-    <priority>0.50</priority>
-  </url>
-
-  <url>
-    <loc>https://reelcoverfit.com/privacy.html</loc>
-    <priority>0.40</priority>
-  </url>
-
-  <url>
-    <loc>https://reelcoverfit.com/terms.html</loc>
-    <priority>0.40</priority>
-  </url>
-
+  <url><loc>https://reelcoverfit.com/</loc><changefreq>daily</changefreq><priority>1.0</priority></url>
+  <url><loc>https://reelcoverfit.com/instagram-reel-cover-size.html</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://reelcoverfit.com/instagram-reel-thumbnail-safe-zone.html</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://reelcoverfit.com/why-instagram-reel-cover-cropped.html</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://reelcoverfit.com/canva-instagram-reel-cover-size.html</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://reelcoverfit.com/reel-cover-text-placement.html</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://reelcoverfit.com/about.html</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://reelcoverfit.com/privacy.html</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://reelcoverfit.com/terms.html</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://reelcoverfit.com/contact.html</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
 </urlset>
