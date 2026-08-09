@@ -1,0 +1,1382 @@
+const MAX_FILE_SIZE = 10 * 1024 * 1024;
+const TARGET_WIDTH = 1080;
+const TARGET_HEIGHT = 1920;
+const TARGET_RATIO = 9 / 16;
+const RATIO_TOLERANCE = 0.03;
+
+const state = {
+  image: null,
+  fileName: "",
+  showSafeZone: true,
+  showGridPreview: true,
+  cropZoom: 1,
+  cropOffsetX: 0,
+  cropOffsetY: 0,
+  isDragging: false,
+  showRuleOfThirds: true,
+  showFaceGuide: true,
+  snapToCenter: true
+};
+
+const imageInput = document.getElementById("imageInput");
+const dropZone = document.getElementById("dropZone");
+const statusMessage = document.getElementById("statusMessage");
+const dimensionResult = document.getElementById("dimensionResult");
+const ratioResult = document.getElementById("ratioResult");
+const recommendationText = document.getElementById("recommendationText");
+const creatorScoreValue = document.getElementById("creatorScoreValue");
+const creatorScoreLabel = document.getElementById("creatorScoreLabel");
+const creatorScoreBar = document.getElementById("creatorScoreBar");
+const smartAdviceList = document.getElementById("smartAdviceList");
+const scoreRatio = document.getElementById("scoreRatio");
+const scoreResolution = document.getElementById("scoreResolution");
+const scoreSafeZone = document.getElementById("scoreSafeZone");
+const scoreGrid = document.getElementById("scoreGrid");
+
+const reelCanvas = document.getElementById("reelCanvas");
+const reelCtx = reelCanvas ? reelCanvas.getContext("2d") : null;
+const gridCanvas = document.getElementById("gridCanvas");
+const gridCtx = gridCanvas ? gridCanvas.getContext("2d") : null;
+
+const emptyPreview = document.getElementById("emptyPreview");
+const emptyGridPreview = document.getElementById("emptyGridPreview");
+const gridPreviewCard = document.getElementById("gridPreviewCard");
+
+const toggleSafeBtn = document.getElementById("toggleSafeBtn");
+const toggleGridBtn = document.getElementById("toggleGridBtn");
+const downloadBtn = document.getElementById("downloadBtn");
+const resetBtn = document.getElementById("resetBtn");
+const zoomRange = document.getElementById("zoomRange");
+const zoomValue = document.getElementById("zoomValue");
+const resetCropBtn = document.getElementById("resetCropBtn");
+const toggleThirdsBtn = document.getElementById("toggleThirdsBtn");
+const toggleFaceGuideBtn = document.getElementById("toggleFaceGuideBtn");
+const toggleSnapBtn = document.getElementById("toggleSnapBtn");
+const thumbnailAnalyzer = document.getElementById("thumbnailAnalyzer");
+const analyzerSummary = document.getElementById("analyzerSummary");
+const analyzerOverall = document.getElementById("analyzerOverall");
+const analyzerOverallBar = document.getElementById("analyzerOverallBar");
+const analyzerSuggestions = document.getElementById("analyzerSuggestions");
+const analyzerMetrics = {
+  contrast: [document.getElementById("metricContrast"), document.getElementById("metricContrastNote")],
+  brightness: [document.getElementById("metricBrightness"), document.getElementById("metricBrightnessNote")],
+  sharpness: [document.getElementById("metricSharpness"), document.getElementById("metricSharpnessNote")],
+  resolution: [document.getElementById("metricResolution"), document.getElementById("metricResolutionNote")],
+  crop: [document.getElementById("metricCrop"), document.getElementById("metricCropNote")],
+  safety: [document.getElementById("metricSafety"), document.getElementById("metricSafetyNote")]
+};
+
+function trackEvent(eventName, eventParams = {}) {
+  if (typeof window.gtag === "function") {
+    gtag("event", eventName, {
+      tool_name: "reelcoverfit",
+      page_path: window.location.pathname,
+      ...eventParams
+    });
+  }
+}
+
+function getFileSizeBucket(size) {
+  if (size < 500 * 1024) return "under_500kb";
+  if (size < 2 * 1024 * 1024) return "500kb_to_2mb";
+  if (size < 5 * 1024 * 1024) return "2mb_to_5mb";
+  return "5mb_to_10mb";
+}
+
+function setupClickTracking() {
+  document.querySelectorAll("[data-track]").forEach((element) => {
+    element.addEventListener("click", () => {
+      trackEvent(element.dataset.track, {
+        link_text: element.textContent.trim().slice(0, 80),
+        link_url: element.getAttribute("href") || ""
+      });
+    });
+  });
+}
+
+setupClickTracking();
+
+if (dropZone && imageInput) {
+  dropZone.addEventListener("click", () => imageInput.click());
+
+  dropZone.addEventListener("keydown", (event) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      imageInput.click();
+    }
+  });
+
+  imageInput.addEventListener("change", (event) => {
+    const file = event.target.files[0];
+    if (file) handleImageFile(file, "file_picker");
+  });
+
+  ["dragenter", "dragover"].forEach((eventName) => {
+    dropZone.addEventListener(eventName, (event) => {
+      event.preventDefault();
+      dropZone.classList.add("drag-over");
+    });
+  });
+
+  ["dragleave", "drop"].forEach((eventName) => {
+    dropZone.addEventListener(eventName, (event) => {
+      event.preventDefault();
+      dropZone.classList.remove("drag-over");
+    });
+  });
+
+  dropZone.addEventListener("drop", (event) => {
+    const file = event.dataTransfer.files[0];
+    if (file) handleImageFile(file, "drag_drop");
+  });
+}
+
+if (toggleSafeBtn) {
+  toggleSafeBtn.addEventListener("click", () => {
+    state.showSafeZone = !state.showSafeZone;
+    toggleSafeBtn.textContent = state.showSafeZone ? "Hide Safe Zone" : "Show Safe Zone";
+    toggleSafeBtn.setAttribute("aria-pressed", state.showSafeZone ? "true" : "false");
+    drawReelPreview();
+    refreshCreatorScore();
+    updateThumbnailAnalyzer();
+    trackEvent("safe_zone_toggle", {
+      safe_zone_visible: state.showSafeZone ? "yes" : "no"
+    });
+  });
+}
+
+if (toggleGridBtn && gridPreviewCard) {
+  toggleGridBtn.addEventListener("click", () => {
+    state.showGridPreview = !state.showGridPreview;
+    toggleGridBtn.textContent = state.showGridPreview ? "Hide Grid Preview" : "Show Grid Preview";
+    toggleGridBtn.setAttribute("aria-pressed", state.showGridPreview ? "true" : "false");
+    gridPreviewCard.style.display = state.showGridPreview ? "block" : "none";
+    refreshCreatorScore();
+    updateThumbnailAnalyzer();
+    trackEvent("grid_preview_toggle", {
+      grid_preview_visible: state.showGridPreview ? "yes" : "no"
+    });
+  });
+}
+
+if (downloadBtn) {
+  downloadBtn.addEventListener("click", downloadPreview);
+}
+
+if (resetBtn) {
+  resetBtn.addEventListener("click", resetTool);
+}
+
+setupCropControls();
+
+function handleImageFile(file, uploadMethod = "unknown") {
+  trackEvent("image_upload", {
+    upload_method: uploadMethod,
+    file_type: file.type || "unknown",
+    file_size_bucket: getFileSizeBucket(file.size)
+  });
+
+  if (!file.type.startsWith("image/")) {
+    setStatus("Please upload a valid image file.", "error");
+    trackEvent("image_upload_error", { error_reason: "invalid_file_type" });
+    return;
+  }
+
+  if (file.size > MAX_FILE_SIZE) {
+    setStatus("This image is too large. Please upload an image under 10 MB.", "error");
+    trackEvent("image_upload_error", { error_reason: "file_too_large" });
+    return;
+  }
+
+  setStatus("Loading your image...", "warning");
+
+  const imageUrl = URL.createObjectURL(file);
+  const image = new Image();
+
+  image.onload = () => {
+    URL.revokeObjectURL(imageUrl);
+
+    state.image = image;
+    state.fileName = file.name;
+    state.showSafeZone = true;
+    state.showGridPreview = true;
+    resetCrop(false);
+
+    const ratioStatus = updateImageInfo(image, file);
+    updateCreatorScore(image, ratioStatus);
+    updateThumbnailAnalyzer();
+    showToolControls();
+    drawReelPreview();
+    drawGridPreview();
+    drawSurfacePreview();
+
+    setStatus("Image loaded. Drag inside the Reel preview to position it, then adjust zoom if needed.", "success");
+
+    trackEvent("cover_checked", {
+      image_width: image.naturalWidth,
+      image_height: image.naturalHeight,
+      ratio_status: ratioStatus
+    });
+  };
+
+  image.onerror = () => {
+    URL.revokeObjectURL(imageUrl);
+    setStatus("Could not load this image. Please try a different file.", "error");
+    trackEvent("image_upload_error", { error_reason: "image_load_failed" });
+  };
+
+  image.src = imageUrl;
+}
+
+function updateImageInfo(image, file) {
+  if (!dimensionResult || !ratioResult || !recommendationText || !statusMessage) return "unknown";
+
+  const width = image.naturalWidth;
+  const height = image.naturalHeight;
+  const ratio = width / height;
+  const difference = Math.abs(ratio - TARGET_RATIO);
+  let ratioStatus = "good_9_16_fit";
+
+  dimensionResult.textContent = `${width} × ${height}px`;
+
+  if (difference <= RATIO_TOLERANCE) {
+    ratioResult.textContent = "Good 9:16 fit";
+    ratioResult.style.color = "var(--success)";
+    recommendationText.textContent =
+      "Great! Your image is close to 9:16. Now check whether important text, face, or logo stays inside the safe zone.";
+  } else if (ratio > TARGET_RATIO) {
+    ratioStatus = "too_wide";
+    ratioResult.textContent = "Too wide";
+    ratioResult.style.color = "var(--warning)";
+    recommendationText.textContent =
+      "Your image is wider than 9:16. Some left and right parts may be cropped in a vertical Reel preview.";
+  } else {
+    ratioStatus = "too_tall_or_narrow";
+    ratioResult.textContent = "Too tall/narrow";
+    ratioResult.style.color = "var(--warning)";
+    recommendationText.textContent =
+      "Your image is narrower than 9:16. It may need cropping or background filling for a clean Reel preview.";
+  }
+
+  const readableSize = formatFileSize(file.size);
+  statusMessage.textContent = `Loaded: ${file.name} (${readableSize})`;
+  return ratioStatus;
+}
+
+function showToolControls() {
+  if (reelCanvas) reelCanvas.style.display = "block";
+  if (gridCanvas) gridCanvas.style.display = "block";
+  if (emptyPreview) emptyPreview.style.display = "none";
+  if (emptyGridPreview) emptyGridPreview.style.display = "none";
+  if (gridPreviewCard) gridPreviewCard.style.display = "block";
+
+  if (toggleSafeBtn) {
+    toggleSafeBtn.disabled = false;
+    toggleSafeBtn.textContent = "Hide Safe Zone";
+    toggleSafeBtn.setAttribute("aria-pressed", "true");
+  }
+  if (toggleGridBtn) {
+    toggleGridBtn.disabled = false;
+    toggleGridBtn.textContent = "Hide Grid Preview";
+    toggleGridBtn.setAttribute("aria-pressed", "true");
+  }
+  if (downloadBtn) downloadBtn.disabled = false;
+  if (resetBtn) resetBtn.disabled = false;
+  if (zoomRange) zoomRange.disabled = false;
+  if (resetCropBtn) resetCropBtn.disabled = false;
+  if (toggleThirdsBtn) toggleThirdsBtn.disabled = false;
+  if (toggleFaceGuideBtn) toggleFaceGuideBtn.disabled = false;
+  if (toggleSnapBtn) toggleSnapBtn.disabled = false;
+  if (reelCanvas) {
+    reelCanvas.classList.add("crop-enabled");
+    reelCanvas.tabIndex = 0;
+  }
+}
+
+function drawReelPreview() {
+  if (!state.image || !reelCtx || !reelCanvas) return;
+
+  clearCanvas(reelCtx, reelCanvas);
+  drawImageWithCrop(reelCtx, state.image, TARGET_WIDTH, TARGET_HEIGHT);
+
+  if (state.showSafeZone) {
+    drawSafeZoneOverlay(reelCtx);
+  }
+
+  drawCreatorOverlays(reelCtx);
+}
+
+function drawGridPreview() {
+  if (!state.image || !gridCtx || !gridCanvas) return;
+
+  clearCanvas(gridCtx, gridCanvas);
+
+  const tempCanvas = document.createElement("canvas");
+  tempCanvas.width = TARGET_WIDTH;
+  tempCanvas.height = TARGET_HEIGHT;
+
+  const tempCtx = tempCanvas.getContext("2d");
+  drawImageWithCrop(tempCtx, state.image, TARGET_WIDTH, TARGET_HEIGHT);
+
+  const squareSize = TARGET_WIDTH;
+  const sourceX = 0;
+  const sourceY = (TARGET_HEIGHT - squareSize) / 2;
+
+  gridCtx.drawImage(
+    tempCanvas,
+    sourceX,
+    sourceY,
+    squareSize,
+    squareSize,
+    0,
+    0,
+    gridCanvas.width,
+    gridCanvas.height
+  );
+
+  drawGridOverlay(gridCtx);
+}
+
+function getCropGeometry(image, canvasWidth, canvasHeight) {
+  const baseScale = Math.max(
+    canvasWidth / image.naturalWidth,
+    canvasHeight / image.naturalHeight
+  );
+  const scale = baseScale * state.cropZoom;
+  const drawWidth = image.naturalWidth * scale;
+  const drawHeight = image.naturalHeight * scale;
+
+  const maxOffsetX = Math.max(0, (drawWidth - canvasWidth) / 2);
+  const maxOffsetY = Math.max(0, (drawHeight - canvasHeight) / 2);
+
+  state.cropOffsetX = clamp(state.cropOffsetX, -maxOffsetX, maxOffsetX);
+  state.cropOffsetY = clamp(state.cropOffsetY, -maxOffsetY, maxOffsetY);
+
+  if (state.snapToCenter) {
+    const snapThreshold = 28;
+    if (Math.abs(state.cropOffsetX) < snapThreshold) state.cropOffsetX = 0;
+    if (Math.abs(state.cropOffsetY) < snapThreshold) state.cropOffsetY = 0;
+  }
+
+  return {
+    x: (canvasWidth - drawWidth) / 2 + state.cropOffsetX,
+    y: (canvasHeight - drawHeight) / 2 + state.cropOffsetY,
+    width: drawWidth,
+    height: drawHeight
+  };
+}
+
+function drawImageWithCrop(ctx, image, canvasWidth, canvasHeight) {
+  const crop = getCropGeometry(image, canvasWidth, canvasHeight);
+  ctx.drawImage(image, crop.x, crop.y, crop.width, crop.height);
+}
+
+function drawSafeZoneOverlay(ctx) {
+  const topUnsafeHeight = 250;
+  const bottomUnsafeHeight = 360;
+  const sideMargin = 110;
+
+  ctx.save();
+
+  ctx.fillStyle = "rgba(239, 68, 68, 0.24)";
+  ctx.fillRect(0, 0, TARGET_WIDTH, topUnsafeHeight);
+  ctx.fillRect(0, TARGET_HEIGHT - bottomUnsafeHeight, TARGET_WIDTH, bottomUnsafeHeight);
+
+  ctx.strokeStyle = "rgba(34, 197, 94, 0.95)";
+  ctx.lineWidth = 8;
+  ctx.setLineDash([28, 18]);
+
+  const safeX = sideMargin;
+  const safeY = topUnsafeHeight;
+  const safeWidth = TARGET_WIDTH - sideMargin * 2;
+  const safeHeight = TARGET_HEIGHT - topUnsafeHeight - bottomUnsafeHeight;
+
+  roundRect(ctx, safeX, safeY, safeWidth, safeHeight, 36);
+  ctx.stroke();
+
+  ctx.setLineDash([]);
+  ctx.fillStyle = "rgba(22, 163, 74, 0.92)";
+  ctx.fillRect(safeX + 22, safeY + 22, 260, 58);
+
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "700 34px Arial, sans-serif";
+  ctx.fillText("Safe Zone", safeX + 42, safeY + 62);
+
+  ctx.fillStyle = "rgba(15, 23, 42, 0.78)";
+  ctx.fillRect(32, 32, 330, 58);
+  ctx.fillRect(32, TARGET_HEIGHT - 92, 430, 58);
+
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "700 30px Arial, sans-serif";
+  ctx.fillText("Top unsafe area", 52, 70);
+  ctx.fillText("Bottom unsafe area", 52, TARGET_HEIGHT - 54);
+
+  ctx.restore();
+}
+
+
+function drawCreatorOverlays(ctx) {
+  ctx.save();
+
+  if (state.showRuleOfThirds) {
+    ctx.strokeStyle = "rgba(255,255,255,.72)";
+    ctx.lineWidth = 3;
+    ctx.setLineDash([16, 14]);
+    ctx.beginPath();
+    ctx.moveTo(TARGET_WIDTH / 3, 0);
+    ctx.lineTo(TARGET_WIDTH / 3, TARGET_HEIGHT);
+    ctx.moveTo((TARGET_WIDTH / 3) * 2, 0);
+    ctx.lineTo((TARGET_WIDTH / 3) * 2, TARGET_HEIGHT);
+    ctx.moveTo(0, TARGET_HEIGHT / 3);
+    ctx.lineTo(TARGET_WIDTH, TARGET_HEIGHT / 3);
+    ctx.moveTo(0, (TARGET_HEIGHT / 3) * 2);
+    ctx.lineTo(TARGET_WIDTH, (TARGET_HEIGHT / 3) * 2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  if (state.showFaceGuide) {
+    const centerX = TARGET_WIDTH / 2;
+    const centerY = TARGET_HEIGHT * 0.38;
+    const radiusX = 190;
+    const radiusY = 245;
+
+    ctx.strokeStyle = "rgba(250,204,21,.95)";
+    ctx.lineWidth = 7;
+    ctx.setLineDash([24, 16]);
+    ctx.beginPath();
+    ctx.ellipse(centerX, centerY, radiusX, radiusY, 0, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    ctx.fillStyle = "rgba(15,23,42,.78)";
+    ctx.fillRect(centerX - 150, centerY - radiusY - 72, 300, 52);
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "700 28px Arial, sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("Recommended face area", centerX, centerY - radiusY - 36);
+  }
+
+  if (state.snapToCenter && state.cropOffsetX === 0 && state.cropOffsetY === 0) {
+    ctx.strokeStyle = "rgba(34,197,94,.95)";
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.moveTo(TARGET_WIDTH / 2, 0);
+    ctx.lineTo(TARGET_WIDTH / 2, TARGET_HEIGHT);
+    ctx.stroke();
+
+    ctx.fillStyle = "rgba(22,163,74,.92)";
+    ctx.fillRect(TARGET_WIDTH / 2 - 92, TARGET_HEIGHT / 2 - 28, 184, 56);
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "700 28px Arial, sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("Centered", TARGET_WIDTH / 2, TARGET_HEIGHT / 2 + 10);
+  }
+
+  ctx.restore();
+}
+
+function drawGridOverlay(ctx) {
+  if (!gridCanvas) return;
+
+  ctx.save();
+
+  ctx.strokeStyle = "rgba(255, 255, 255, 0.82)";
+  ctx.lineWidth = 3;
+
+  ctx.beginPath();
+  ctx.moveTo(gridCanvas.width / 3, 0);
+  ctx.lineTo(gridCanvas.width / 3, gridCanvas.height);
+  ctx.moveTo((gridCanvas.width / 3) * 2, 0);
+  ctx.lineTo((gridCanvas.width / 3) * 2, gridCanvas.height);
+  ctx.moveTo(0, gridCanvas.height / 3);
+  ctx.lineTo(gridCanvas.width, gridCanvas.height / 3);
+  ctx.moveTo(0, (gridCanvas.height / 3) * 2);
+  ctx.lineTo(gridCanvas.width, (gridCanvas.height / 3) * 2);
+  ctx.stroke();
+
+  ctx.fillStyle = "rgba(15, 23, 42, 0.78)";
+  ctx.fillRect(24, 24, 300, 46);
+
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "700 24px Arial, sans-serif";
+  ctx.fillText("Profile grid crop", 42, 55);
+
+  ctx.restore();
+}
+
+function downloadPreview() {
+  if (!state.image || !reelCanvas) {
+    setStatus("Upload an image before downloading.", "error");
+    return;
+  }
+
+  downloadBtn.disabled = true;
+  downloadBtn.textContent = "Preparing Download…";
+  drawReelPreview();
+
+  reelCanvas.toBlob((blob) => {
+    if (!blob) {
+      setStatus("Could not create the preview image. Please try again.", "error");
+      trackEvent("cover_download_error", { error_reason: "blob_failed" });
+      downloadBtn.disabled = false;
+      downloadBtn.textContent = "Download Instagram-Ready Cover";
+      return;
+    }
+
+    const link = document.createElement("a");
+    const cleanName = state.fileName.replace(/\.[^/.]+$/, "").replace(/\s+/g, "-").toLowerCase();
+    const objectUrl = URL.createObjectURL(blob);
+
+    if (downloadBtn) {
+      downloadBtn.disabled = true;
+      downloadBtn.textContent = "Downloading…";
+    }
+
+    link.download = `${cleanName || "reelcoverfit"}-checked-preview.png`;
+    link.href = objectUrl;
+    link.click();
+
+    window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+    setStatus("Preview downloaded successfully.", "success");
+    if (downloadBtn) {
+      downloadBtn.textContent = "Downloaded ✓";
+      window.setTimeout(() => {
+        downloadBtn.textContent = "Download Preview";
+        downloadBtn.disabled = false;
+      }, 1800);
+    }
+    if (shareBox) {
+  shareBox.hidden = false;
+}
+
+    downloadBtn.textContent = "Downloaded ✓";
+    window.setTimeout(() => {
+      downloadBtn.disabled = false;
+      downloadBtn.textContent = "Download Instagram-Ready Cover";
+    }, 1800);
+
+    trackEvent("cover_download", {
+      file_name_length: state.fileName.length,
+      safe_zone_visible: state.showSafeZone ? "yes" : "no",
+      rule_of_thirds_visible: state.showRuleOfThirds ? "yes" : "no",
+      face_guide_visible: state.showFaceGuide ? "yes" : "no"
+    });
+  }, "image/png");
+}
+
+function resetTool() {
+  state.image = null;
+  state.fileName = "";
+  state.showSafeZone = true;
+  state.showGridPreview = true;
+  resetCrop(false);
+
+  if (imageInput) imageInput.value = "";
+
+  if (reelCtx && reelCanvas) clearCanvas(reelCtx, reelCanvas);
+  if (gridCtx && gridCanvas) clearCanvas(gridCtx, gridCanvas);
+
+  if (reelCanvas) reelCanvas.style.display = "none";
+  if (gridCanvas) gridCanvas.style.display = "none";
+  if (emptyPreview) emptyPreview.style.display = "block";
+  if (emptyGridPreview) emptyGridPreview.style.display = "block";
+  if (surfaceCanvas) surfaceCanvas.style.display = "none";
+  if (emptySurfacePreview) emptySurfacePreview.style.display = "block";
+  if (gridPreviewCard) gridPreviewCard.style.display = "block";
+
+  if (dimensionResult) dimensionResult.textContent = "Not uploaded";
+  if (ratioResult) {
+    ratioResult.textContent = "Waiting";
+    ratioResult.style.color = "inherit";
+  }
+  if (recommendationText) {
+    recommendationText.textContent =
+      "Tip: Keep important text, face, and logo away from the top and bottom edges.";
+  }
+
+  resetCreatorScore();
+  resetThumbnailAnalyzer();
+
+  if (toggleSafeBtn) {
+    toggleSafeBtn.disabled = true;
+    toggleSafeBtn.setAttribute("aria-pressed", "false");
+  }
+  if (toggleGridBtn) {
+    toggleGridBtn.disabled = true;
+    toggleGridBtn.setAttribute("aria-pressed", "false");
+  }
+  if (downloadBtn) downloadBtn.disabled = true;
+  if (resetBtn) resetBtn.disabled = true;
+  if (zoomRange) zoomRange.disabled = true;
+  if (resetCropBtn) resetCropBtn.disabled = true;
+  [toggleThirdsBtn, toggleFaceGuideBtn, toggleSnapBtn].forEach((button) => {
+    if (!button) return;
+    button.disabled = true;
+    button.classList.add("active");
+    button.setAttribute("aria-pressed", "true");
+  });
+  if (reelCanvas) reelCanvas.classList.remove("crop-enabled", "is-dragging");
+
+  setStatus("Upload an image to start checking.", "");
+  trackEvent("tool_reset");
+}
+
+function clearCanvas(ctx, canvas) {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+}
+
+function setStatus(message, type) {
+  if (!statusMessage) return;
+
+  statusMessage.textContent = message;
+  statusMessage.className = "status-message";
+
+  if (type) {
+    statusMessage.classList.add(type);
+  }
+}
+
+function updateThumbnailAnalyzer() {
+  if (!state.image || !analyzerOverall) return;
+
+  const metrics = analyzeCurrentCrop();
+  const width = state.image.naturalWidth;
+  const height = state.image.naturalHeight;
+  const contrastScore = normalizeScore(metrics.contrast, 18, 72);
+  const brightnessScore = Math.max(0, 100 - Math.abs(metrics.meanBrightness - 135) * 0.85);
+  const sharpnessScore = normalizeScore(metrics.sharpness, 5, 28);
+  const resolutionScore = Math.min(100, Math.round(Math.min(width / TARGET_WIDTH, height / TARGET_HEIGHT) * 100));
+  const cropDistance = Math.min(1, Math.hypot(state.cropOffsetX, state.cropOffsetY) / 650);
+  const cropScore = Math.max(45, Math.round(100 - cropDistance * 38 - (state.cropZoom - 1) * 18));
+  const safetyScore = Math.round((state.showSafeZone ? 45 : 15) + (state.showGridPreview ? 30 : 10) + (state.showRuleOfThirds ? 15 : 5) + (state.showFaceGuide ? 10 : 4));
+
+  const overall = Math.round(
+    contrastScore * 0.22 +
+    brightnessScore * 0.16 +
+    sharpnessScore * 0.22 +
+    resolutionScore * 0.18 +
+    cropScore * 0.12 +
+    safetyScore * 0.10
+  );
+
+  analyzerOverall.textContent = String(overall);
+  if (analyzerOverallBar) analyzerOverallBar.style.width = `${overall}%`;
+  if (analyzerSummary) {
+    analyzerSummary.textContent = overall >= 88 ? "Strong technical cover quality." : overall >= 72 ? "Good base with a few improvements available." : overall >= 55 ? "Usable, but review the suggestions below." : "The cover needs technical improvement.";
+  }
+
+  setAnalyzerMetric("contrast", contrastScore, contrastScore >= 75 ? "Strong tonal separation" : contrastScore >= 55 ? "Moderate contrast" : "Low contrast may reduce impact");
+  setAnalyzerMetric("brightness", brightnessScore, metrics.meanBrightness < 75 ? "Image appears dark" : metrics.meanBrightness > 205 ? "Highlights may be too bright" : "Brightness is balanced");
+  setAnalyzerMetric("sharpness", sharpnessScore, sharpnessScore >= 75 ? "Details look crisp" : sharpnessScore >= 50 ? "Acceptable detail" : "Image may look soft");
+  setAnalyzerMetric("resolution", resolutionScore, width >= TARGET_WIDTH && height >= TARGET_HEIGHT ? "Meets 1080 × 1920 recommendation" : `${width} × ${height}px source`);
+  setAnalyzerMetric("crop", cropScore, state.cropZoom > 1.8 ? "Heavy zoom may reduce clarity" : Math.abs(state.cropOffsetX) + Math.abs(state.cropOffsetY) < 80 ? "Composition stays near center" : "Manual crop is strongly offset");
+  setAnalyzerMetric("safety", safetyScore, state.showSafeZone && state.showGridPreview ? "Core previews are enabled" : "Turn overlays on for a complete check");
+
+  const suggestions = [];
+  if (contrastScore < 60) suggestions.push("Increase contrast or simplify the background so the subject stands out.");
+  if (metrics.meanBrightness < 75) suggestions.push("Brighten the cover slightly so it remains visible on small screens.");
+  if (metrics.meanBrightness > 205) suggestions.push("Reduce highlights to preserve detail in bright areas.");
+  if (sharpnessScore < 55) suggestions.push("Use a sharper, higher-quality source image.");
+  if (resolutionScore < 75) suggestions.push("Export at 1080 × 1920 px or higher for better clarity.");
+  if (state.cropZoom > 2) suggestions.push("Avoid excessive zoom because it can amplify blur and remove context.");
+  if (!state.showSafeZone) suggestions.push("Enable the safe-zone overlay before final export.");
+  if (!state.showGridPreview) suggestions.push("Enable the grid preview to confirm the center crop.");
+
+  if (analyzerSuggestions) {
+    analyzerSuggestions.innerHTML = "";
+    (suggestions.length ? suggestions : ["The cover passes the current pixel-level technical checks. Review title placement manually before posting."]).forEach((message) => {
+      const li = document.createElement("li");
+      li.textContent = message;
+      analyzerSuggestions.appendChild(li);
+    });
+  }
+
+}
+
+function analyzeCurrentCrop() {
+  const sampleCanvas = document.createElement("canvas");
+  sampleCanvas.width = 135;
+  sampleCanvas.height = 240;
+  const ctx = sampleCanvas.getContext("2d", { willReadFrequently: true });
+
+  const baseScale = Math.max(TARGET_WIDTH / state.image.naturalWidth, TARGET_HEIGHT / state.image.naturalHeight);
+  const scale = baseScale * state.cropZoom;
+  const fullWidth = state.image.naturalWidth * scale;
+  const fullHeight = state.image.naturalHeight * scale;
+  const drawX = (TARGET_WIDTH - fullWidth) / 2 + state.cropOffsetX;
+  const drawY = (TARGET_HEIGHT - fullHeight) / 2 + state.cropOffsetY;
+  const sx = -drawX / scale;
+  const sy = -drawY / scale;
+  const sw = TARGET_WIDTH / scale;
+  const sh = TARGET_HEIGHT / scale;
+
+  ctx.drawImage(state.image, sx, sy, sw, sh, 0, 0, sampleCanvas.width, sampleCanvas.height);
+  const { data } = ctx.getImageData(0, 0, sampleCanvas.width, sampleCanvas.height);
+  const luminance = new Float32Array(sampleCanvas.width * sampleCanvas.height);
+  let sum = 0;
+
+  for (let i = 0, p = 0; i < data.length; i += 4, p += 1) {
+    const value = 0.2126 * data[i] + 0.7152 * data[i + 1] + 0.0722 * data[i + 2];
+    luminance[p] = value;
+    sum += value;
+  }
+
+  const mean = sum / luminance.length;
+  let variance = 0;
+  let edges = 0;
+  let edgeCount = 0;
+
+  for (let y = 0; y < sampleCanvas.height; y += 1) {
+    for (let x = 0; x < sampleCanvas.width; x += 1) {
+      const index = y * sampleCanvas.width + x;
+      const value = luminance[index];
+      variance += (value - mean) ** 2;
+      if (x > 0 && y > 0) {
+        edges += Math.abs(value - luminance[index - 1]) + Math.abs(value - luminance[index - sampleCanvas.width]);
+        edgeCount += 2;
+      }
+    }
+  }
+
+  return {
+    meanBrightness: mean,
+    contrast: Math.sqrt(variance / luminance.length),
+    sharpness: edgeCount ? edges / edgeCount : 0
+  };
+}
+
+function normalizeScore(value, low, high) {
+  if (value <= low) return 35;
+  if (value >= high) return 100;
+  return 35 + ((value - low) / (high - low)) * 65;
+}
+
+function setAnalyzerMetric(key, score, note) {
+  const [valueElement, noteElement] = analyzerMetrics[key] || [];
+  if (valueElement) valueElement.textContent = `${Math.round(score)}/100`;
+  if (noteElement) noteElement.textContent = note;
+}
+
+function resetThumbnailAnalyzer() {
+  if (analyzerOverall) analyzerOverall.textContent = "--";
+  if (analyzerOverallBar) analyzerOverallBar.style.width = "0%";
+  if (analyzerSummary) analyzerSummary.textContent = "Upload a cover to analyze its technical visual quality.";
+  Object.values(analyzerMetrics).forEach(([valueElement, noteElement]) => {
+    if (valueElement) valueElement.textContent = "--";
+    if (noteElement) noteElement.textContent = "Waiting";
+  });
+  if (analyzerSuggestions) analyzerSuggestions.innerHTML = "<li>Your suggestions will appear here.</li>";
+}
+
+function updateCreatorScore(image, ratioStatus) {
+  if (!creatorScoreValue || !scoreRatio || !scoreResolution || !scoreSafeZone || !scoreGrid) return;
+
+  const width = image.naturalWidth;
+  const height = image.naturalHeight;
+  let score = 100;
+  const advice = [];
+
+  if (ratioStatus !== "good_9_16_fit") {
+    score -= 28;
+    advice.push(
+      ratioStatus === "too_wide"
+        ? "Crop the left and right sides or redesign on a 9:16 canvas."
+        : "Add side space or redesign on a 9:16 canvas so the cover does not look narrow."
+    );
+  }
+
+  if (width < 720 || height < 1280) {
+    score -= 24;
+    advice.push("Export a larger image. Aim for 1080 × 1920 px for clearer results.");
+  } else if (width < TARGET_WIDTH || height < TARGET_HEIGHT) {
+    score -= 10;
+    advice.push("Your resolution is usable, but 1080 × 1920 px is safer for sharp output.");
+  }
+
+  if (!state.showSafeZone) {
+    score -= 6;
+    advice.push("Turn the safe-zone overlay on before your final check.");
+  }
+
+  if (!state.showGridPreview) {
+    score -= 6;
+    advice.push("Turn the grid preview on to confirm the center crop still works.");
+  }
+
+  score = Math.max(35, Math.min(100, score));
+  creatorScoreValue.textContent = `${score}/100`;
+  if (creatorScoreBar) creatorScoreBar.style.width = `${score}%`;
+
+  const rating = getScoreRating(score);
+  if (creatorScoreLabel) {
+    creatorScoreLabel.textContent = `${rating.label} — ${rating.message}`;
+    creatorScoreLabel.dataset.rating = rating.key;
+  }
+
+  setChecklistItem(
+    scoreRatio,
+    ratioStatus === "good_9_16_fit" ? "pass" : "warn",
+    ratioStatus === "good_9_16_fit"
+      ? "Aspect ratio is close to 9:16."
+      : "Aspect ratio needs adjustment; some content may be cropped."
+  );
+
+  const highResolution = width >= TARGET_WIDTH && height >= TARGET_HEIGHT;
+  const usableResolution = width >= 720 && height >= 1280;
+  setChecklistItem(
+    scoreResolution,
+    highResolution ? "pass" : usableResolution ? "warn" : "fail",
+    highResolution
+      ? "Resolution meets the 1080 × 1920 recommendation."
+      : usableResolution
+        ? "Resolution is usable, but below the ideal export size."
+        : "Resolution is low and may look soft after posting."
+  );
+
+  setChecklistItem(
+    scoreSafeZone,
+    state.showSafeZone ? "pass" : "warn",
+    state.showSafeZone
+      ? "Safe-zone overlay is visible for manual placement checking."
+      : "Safe-zone overlay is hidden."
+  );
+
+  setChecklistItem(
+    scoreGrid,
+    state.showGridPreview ? "pass" : "warn",
+    state.showGridPreview
+      ? "Profile grid crop preview is visible."
+      : "Profile grid crop preview is hidden."
+  );
+
+  renderSmartAdvice(advice);
+}
+
+function getScoreRating(score) {
+  if (score >= 90) {
+    return { key: "excellent", label: "Excellent", message: "Technically ready for a final visual check." };
+  }
+  if (score >= 75) {
+    return { key: "good", label: "Good", message: "A few improvements can make it safer." };
+  }
+  if (score >= 55) {
+    return { key: "adjust", label: "Needs adjustment", message: "Fix the highlighted technical issues." };
+  }
+  return { key: "poor", label: "Not ready", message: "Use a larger 9:16 export before posting." };
+}
+
+function renderSmartAdvice(advice) {
+  if (!smartAdviceList) return;
+
+  const suggestions = advice.length
+    ? advice
+    : [
+        "Keep titles, faces, and logos inside the green safe-zone box.",
+        "Check the square profile crop before downloading."
+      ];
+
+  smartAdviceList.innerHTML = "";
+  suggestions.forEach((suggestion) => {
+    const item = document.createElement("li");
+    item.textContent = suggestion;
+    smartAdviceList.appendChild(item);
+  });
+}
+
+function refreshCreatorScore() {
+  if (!state.image) return;
+  const ratio = state.image.naturalWidth / state.image.naturalHeight;
+  const difference = Math.abs(ratio - TARGET_RATIO);
+  const ratioStatus = difference <= RATIO_TOLERANCE
+    ? "good_9_16_fit"
+    : ratio > TARGET_RATIO
+      ? "too_wide"
+      : "too_tall_or_narrow";
+  updateCreatorScore(state.image, ratioStatus);
+}
+
+function resetCreatorScore() {
+  if (!creatorScoreValue || !scoreRatio || !scoreResolution || !scoreSafeZone || !scoreGrid) return;
+
+  creatorScoreValue.textContent = "--";
+  if (creatorScoreBar) creatorScoreBar.style.width = "0%";
+  if (creatorScoreLabel) {
+    creatorScoreLabel.textContent = "Upload a cover to generate your report.";
+    delete creatorScoreLabel.dataset.rating;
+  }
+  setChecklistItem(scoreRatio, "", "Upload an image to check 9:16 fit.");
+  setChecklistItem(scoreResolution, "", "Resolution check waiting.");
+  setChecklistItem(scoreSafeZone, "", "Safe zone guidance waiting.");
+  setChecklistItem(scoreGrid, "", "Grid crop preview waiting.");
+  renderSmartAdvice(["Your personalized technical suggestions will appear here."]);
+}
+
+function setChecklistItem(element, status, text) {
+  if (!element) return;
+  element.classList.remove("pass", "warn", "fail");
+  if (status) element.classList.add(status);
+  element.textContent = text;
+}
+
+function formatFileSize(bytes) {
+  if (bytes < 1024 * 1024) {
+    return `${Math.round(bytes / 1024)} KB`;
+  }
+
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function roundRect(ctx, x, y, width, height, radius) {
+  ctx.beginPath();
+  ctx.moveTo(x + radius, y);
+  ctx.lineTo(x + width - radius, y);
+  ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+  ctx.lineTo(x + width, y + height - radius);
+  ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+  ctx.lineTo(x + radius, y + height);
+  ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+  ctx.lineTo(x, y + radius);
+  ctx.quadraticCurveTo(x, y, x + radius, y);
+  ctx.closePath();
+}
+
+
+
+
+function setupOverlayToggle(button, stateKey, eventName) {
+  if (!button) return;
+
+  button.addEventListener("click", () => {
+    state[stateKey] = !state[stateKey];
+    button.classList.toggle("active", state[stateKey]);
+    button.setAttribute("aria-pressed", state[stateKey] ? "true" : "false");
+    redrawCropPreviews();
+
+    trackEvent(eventName, {
+      enabled: state[stateKey] ? "yes" : "no"
+    });
+  });
+}
+
+function setupCropControls() {
+  if (!reelCanvas) return;
+
+  const pointers = new Map();
+  let lastPointer = null;
+  let pinchStartDistance = 0;
+  let pinchStartZoom = 1;
+
+  if (zoomRange) {
+    zoomRange.addEventListener("input", () => {
+      if (!state.image) return;
+      setCropZoom(Number(zoomRange.value) / 100, true);
+    });
+  }
+
+  if (resetCropBtn) {
+    resetCropBtn.addEventListener("click", () => resetCrop(true));
+  }
+
+  setupOverlayToggle(toggleThirdsBtn, "showRuleOfThirds", "rule_of_thirds_toggle");
+  setupOverlayToggle(toggleFaceGuideBtn, "showFaceGuide", "face_guide_toggle");
+  setupOverlayToggle(toggleSnapBtn, "snapToCenter", "snap_to_center_toggle");
+
+  reelCanvas.addEventListener("dblclick", () => {
+    if (state.image) resetCrop(true);
+  });
+
+  reelCanvas.addEventListener("wheel", (event) => {
+    if (!state.image) return;
+    event.preventDefault();
+    const step = event.deltaY < 0 ? 0.08 : -0.08;
+    setCropZoom(state.cropZoom + step, true);
+  }, { passive: false });
+
+  reelCanvas.addEventListener("pointerdown", (event) => {
+    if (!state.image) return;
+    reelCanvas.setPointerCapture(event.pointerId);
+    pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+
+    if (pointers.size === 1) {
+      state.isDragging = true;
+      lastPointer = { x: event.clientX, y: event.clientY };
+      reelCanvas.classList.add("is-dragging");
+    } else if (pointers.size === 2) {
+      const [a, b] = [...pointers.values()];
+      pinchStartDistance = Math.hypot(b.x - a.x, b.y - a.y);
+      pinchStartZoom = state.cropZoom;
+      state.isDragging = false;
+    }
+  });
+
+  reelCanvas.addEventListener("pointermove", (event) => {
+    if (!state.image || !pointers.has(event.pointerId)) return;
+    pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+
+    if (pointers.size === 2) {
+      const [a, b] = [...pointers.values()];
+      const distance = Math.hypot(b.x - a.x, b.y - a.y);
+      if (pinchStartDistance > 0) {
+        setCropZoom(pinchStartZoom * (distance / pinchStartDistance), false);
+        redrawCropPreviews();
+      }
+      return;
+    }
+
+    if (!state.isDragging || !lastPointer) return;
+    const rect = reelCanvas.getBoundingClientRect();
+    const scaleX = TARGET_WIDTH / rect.width;
+    const scaleY = TARGET_HEIGHT / rect.height;
+    state.cropOffsetX += (event.clientX - lastPointer.x) * scaleX;
+    state.cropOffsetY += (event.clientY - lastPointer.y) * scaleY;
+    lastPointer = { x: event.clientX, y: event.clientY };
+    redrawCropPreviews();
+  });
+
+  const endPointer = (event) => {
+    pointers.delete(event.pointerId);
+    if (pointers.size === 0) {
+      state.isDragging = false;
+      lastPointer = null;
+      reelCanvas.classList.remove("is-dragging");
+      trackEvent("crop_adjusted", {
+        zoom_percent: Math.round(state.cropZoom * 100),
+        offset_x: Math.round(state.cropOffsetX),
+        offset_y: Math.round(state.cropOffsetY)
+      });
+    } else if (pointers.size === 1) {
+      const point = [...pointers.values()][0];
+      state.isDragging = true;
+      lastPointer = { ...point };
+      reelCanvas.classList.add("is-dragging");
+    }
+  };
+
+  reelCanvas.addEventListener("pointerup", endPointer);
+  reelCanvas.addEventListener("pointercancel", endPointer);
+
+  reelCanvas.addEventListener("keydown", (event) => {
+    if (!state.image) return;
+    const amount = event.shiftKey ? 60 : 20;
+    let handled = true;
+    if (event.key === "ArrowLeft") state.cropOffsetX -= amount;
+    else if (event.key === "ArrowRight") state.cropOffsetX += amount;
+    else if (event.key === "ArrowUp") state.cropOffsetY -= amount;
+    else if (event.key === "ArrowDown") state.cropOffsetY += amount;
+    else if (event.key === "+" || event.key === "=") setCropZoom(state.cropZoom + 0.05, false);
+    else if (event.key === "-") setCropZoom(state.cropZoom - 0.05, false);
+    else if (event.key === "0") resetCrop(true);
+    else handled = false;
+
+    if (handled) {
+      event.preventDefault();
+      redrawCropPreviews();
+    }
+  });
+}
+
+function setCropZoom(nextZoom, shouldRedraw = true) {
+  state.cropZoom = clamp(nextZoom, 1, 3);
+  if (zoomRange) zoomRange.value = String(Math.round(state.cropZoom * 100));
+  if (zoomValue) zoomValue.textContent = `${Math.round(state.cropZoom * 100)}%`;
+  if (shouldRedraw) redrawCropPreviews();
+}
+
+function resetCrop(announce = false) {
+  state.cropZoom = 1;
+  state.cropOffsetX = 0;
+  state.cropOffsetY = 0;
+  if (zoomRange) zoomRange.value = "100";
+  if (zoomValue) zoomValue.textContent = "100%";
+  if (state.image) redrawCropPreviews();
+  if (announce) {
+    setStatus("Crop reset to the centered 9:16 view.", "success");
+    trackEvent("crop_reset");
+  }
+}
+
+function redrawCropPreviews() {
+  if (!state.image) return;
+  drawReelPreview();
+  drawGridPreview();
+  drawSurfacePreview();
+  updateThumbnailAnalyzer();
+}
+
+function clamp(value, min, max) {
+  return Math.min(max, Math.max(min, value));
+}
+
+// scroll_depth_tracking
+const scrollDepthState = {
+  25: false,
+  50: false,
+  75: false,
+  90: false
+};
+
+window.addEventListener("scroll", () => {
+  const scrollableHeight = document.documentElement.scrollHeight - window.innerHeight;
+  if (scrollableHeight <= 0) return;
+
+  const scrollPercent = Math.round((window.scrollY / scrollableHeight) * 100);
+
+  Object.keys(scrollDepthState).forEach((depth) => {
+    const depthNumber = Number(depth);
+    if (scrollPercent >= depthNumber && !scrollDepthState[depthNumber]) {
+      scrollDepthState[depthNumber] = true;
+      trackEvent(`scroll_${depthNumber}`);
+    }
+  });
+}, { passive: true });
+
+const platformButtons = document.querySelectorAll(".platform-btn");
+const shareBox = document.getElementById("shareBox");
+const copySiteLinkBtn = document.getElementById("copySiteLinkBtn");
+
+platformButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    platformButtons.forEach((btn) => {
+      btn.classList.remove("active");
+      btn.setAttribute("aria-pressed", "false");
+    });
+    button.classList.add("active");
+    button.setAttribute("aria-pressed", "true");
+
+    const platform = button.dataset.platform;
+
+    recommendationText.textContent =
+      `${platform} selected. Use a vertical 9:16 cover and keep text near the center safe zone.`;
+
+    trackEvent("platform_selected", {
+      platform
+    });
+  });
+});
+
+
+if (copySiteLinkBtn) {
+  copySiteLinkBtn.addEventListener("click", async () => {
+    try {
+      await navigator.clipboard.writeText("https://reelcoverfit.com/");
+      setStatus("Website link copied.", "success");
+      trackEvent("copy_site_link");
+    } catch {
+      setStatus("Copy failed. Manually copy reelcoverfit.com", "warning");
+    }
+  });
+}
+
+
+// ReelCoverFit v2.4 — Multi-platform Preview Studio
+const surfaceCanvas = document.getElementById("surfaceCanvas");
+const surfaceCtx = surfaceCanvas ? surfaceCanvas.getContext("2d") : null;
+const emptySurfacePreview = document.getElementById("emptySurfacePreview");
+const surfaceTabs = document.querySelectorAll(".surface-tab");
+const surfacePreviewTag = document.getElementById("surfacePreviewTag");
+const surfacePreviewAdvice = document.getElementById("surfacePreviewAdvice");
+const surfaceCanvasWrap = document.getElementById("surfaceCanvasWrap");
+state.activeSurface = "instagram-reel";
+
+const surfaceConfig = {
+  "instagram-reel": { width:1080, height:1920, label:"Instagram Reel · 9:16", advice:"Check the full vertical cover and keep key content inside the safe area." },
+  "instagram-grid": { width:1080, height:1080, label:"Profile Grid · 1:1", advice:"This center crop shows what may remain visible on a square profile grid." },
+  "instagram-explore": { width:1080, height:1350, label:"Instagram Explore · 4:5", advice:"The 4:5 preview helps you protect titles and faces in portrait discovery surfaces." },
+  "youtube-shorts": { width:1080, height:1920, label:"YouTube Shorts · 9:16", advice:"Use the center area for titles because player controls can cover edge content." },
+  "tiktok": { width:1080, height:1920, label:"TikTok · 9:16", advice:"Keep text away from the right-side action rail and bottom caption area." }
+};
+
+function drawSurfacePreview() {
+  if (!state.image || !surfaceCtx || !surfaceCanvas) return;
+  const config = surfaceConfig[state.activeSurface] || surfaceConfig["instagram-reel"];
+  surfaceCanvas.width = config.width;
+  surfaceCanvas.height = config.height;
+  surfaceCtx.clearRect(0,0,config.width,config.height);
+
+  const temp = document.createElement("canvas");
+  temp.width = TARGET_WIDTH; temp.height = TARGET_HEIGHT;
+  const tempCtx = temp.getContext("2d");
+  drawImageWithCrop(tempCtx,state.image,TARGET_WIDTH,TARGET_HEIGHT);
+
+  const targetRatio = config.width/config.height;
+  const sourceRatio = TARGET_WIDTH/TARGET_HEIGHT;
+  let sx=0, sy=0, sw=TARGET_WIDTH, sh=TARGET_HEIGHT;
+  if (targetRatio > sourceRatio) { sh = TARGET_WIDTH/targetRatio; sy=(TARGET_HEIGHT-sh)/2; }
+  else if (targetRatio < sourceRatio) { sw = TARGET_HEIGHT*targetRatio; sx=(TARGET_WIDTH-sw)/2; }
+  surfaceCtx.drawImage(temp,sx,sy,sw,sh,0,0,config.width,config.height);
+
+  if (state.activeSurface === "tiktok") {
+    surfaceCtx.fillStyle="rgba(15,23,42,.42)";
+    surfaceCtx.fillRect(config.width-150,120,150,config.height-360);
+    surfaceCtx.fillRect(0,config.height-260,config.width,260);
+  }
+  if (state.activeSurface === "youtube-shorts") {
+    surfaceCtx.fillStyle="rgba(15,23,42,.34)";
+    surfaceCtx.fillRect(0,config.height-220,config.width,220);
+  }
+  surfaceCanvas.style.display="block";
+  if (emptySurfacePreview) emptySurfacePreview.style.display="none";
+  if (surfaceCanvasWrap) surfaceCanvasWrap.dataset.surface=state.activeSurface;
+  if (surfacePreviewTag) surfacePreviewTag.textContent=config.label;
+  if (surfacePreviewAdvice) surfacePreviewAdvice.textContent=config.advice;
+}
+
+surfaceTabs.forEach((button)=>button.addEventListener("click",()=>{
+  surfaceTabs.forEach((item)=>{item.classList.remove("active");item.setAttribute("aria-selected","false")});
+  button.classList.add("active"); button.setAttribute("aria-selected","true");
+  state.activeSurface=button.dataset.surface;
+  drawSurfacePreview();
+  trackEvent("surface_preview_selected",{surface:state.activeSurface});
+}));
+
+// Keep platform selector and preview studio aligned.
+platformButtons.forEach((button)=>button.addEventListener("click",()=>{
+  const platform=button.dataset.platform;
+  const map={"Instagram Reels":"instagram-reel","YouTube Shorts":"youtube-shorts","TikTok":"tiktok","Facebook Reels":"instagram-reel"};
+  const target=map[platform];
+  const tab=[...surfaceTabs].find((item)=>item.dataset.surface===target);
+  if(tab) tab.click();
+}));
+
+
+// ReelCoverFit v2.4.1 — visual rating sync and refined preview feedback
+const creatorStars = document.getElementById('creatorStars');
+const creatorStatusBadge = document.getElementById('creatorStatusBadge');
+function syncCreatorVisualRating(){
+  if(!creatorScoreValue) return;
+  const score = Number((creatorScoreValue.textContent || '').replace(/[^0-9]/g,''));
+  if(!score){ if(creatorStars){creatorStars.textContent='☆☆☆☆☆';creatorStars.setAttribute('aria-label','Creator rating waiting');} if(creatorStatusBadge){creatorStatusBadge.textContent='Waiting';creatorStatusBadge.className='creator-status-badge waiting';} return; }
+  const starCount = Math.max(1,Math.min(5,Math.round(score/20)));
+  if(creatorStars){ creatorStars.textContent='★'.repeat(starCount)+'☆'.repeat(5-starCount); creatorStars.setAttribute('aria-label',`${starCount} out of 5 stars`); }
+  let label='Needs work', cls='poor';
+  if(score>=90){label='Excellent';cls='excellent'} else if(score>=75){label='Good';cls='good'} else if(score>=55){label='Adjust';cls='adjust'}
+  if(creatorStatusBadge){creatorStatusBadge.textContent=label;creatorStatusBadge.className=`creator-status-badge ${cls}`;}
+}
+const creatorScoreObserver = creatorScoreValue ? new MutationObserver(syncCreatorVisualRating) : null;
+creatorScoreObserver?.observe(creatorScoreValue,{childList:true,characterData:true,subtree:true});
+syncCreatorVisualRating();
+
+// Re-trigger a subtle canvas reveal when switching platform surfaces.
+document.querySelectorAll('.surface-tab').forEach(button => button.addEventListener('click',()=>{
+  if(!surfaceCanvas) return;
+  surfaceCanvas.style.animation='none';
+  void surfaceCanvas.offsetWidth;
+  surfaceCanvas.style.animation='surfaceReveal .22s ease';
+}));
+
+/* ---------- Batch Quick Check ---------- */
+(function setupBatchCheck() {
+  const batchDropzone = document.getElementById("batchDropzone");
+  const batchInput = document.getElementById("batchInput");
+  const batchGrid = document.getElementById("batchGrid");
+  if (!batchDropzone || !batchInput || !batchGrid) return;
+
+  const TARGET_RATIO = 9 / 16;
+
+  batchDropzone.addEventListener("click", () => batchInput.click());
+
+  batchDropzone.addEventListener("keydown", (event) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      batchInput.click();
+    }
+  });
+
+  batchInput.addEventListener("change", (event) => {
+    handleBatchFiles(event.target.files);
+  });
+
+  ["dragenter", "dragover"].forEach((eventName) => {
+    batchDropzone.addEventListener(eventName, (event) => {
+      event.preventDefault();
+      batchDropzone.classList.add("drag-over");
+    });
+  });
+
+  ["dragleave", "drop"].forEach((eventName) => {
+    batchDropzone.addEventListener(eventName, (event) => {
+      event.preventDefault();
+      batchDropzone.classList.remove("drag-over");
+    });
+  });
+
+  batchDropzone.addEventListener("drop", (event) => {
+    handleBatchFiles(event.dataTransfer.files);
+  });
+
+  function handleBatchFiles(fileList) {
+    const files = Array.from(fileList || []).filter((f) =>
+      /^image\/(jpeg|png)$/.test(f.type)
+    );
+    if (!files.length) return;
+
+    batchGrid.innerHTML = "";
+    trackEvent("batch_check_started", { file_count: files.length });
+
+    files.forEach((file) => {
+      const objectUrl = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = () => {
+        const result = scoreBatchImage(img);
+        renderBatchItem(file, objectUrl, result);
+        trackEvent("batch_item_checked", {
+          ratio_status: result.ratio.status,
+          resolution_status: result.resolution.status
+        });
+      };
+      img.onerror = () => URL.revokeObjectURL(objectUrl);
+      img.src = objectUrl;
+    });
+  }
+
+  function scoreBatchImage(img) {
+    const ratio = img.naturalWidth / img.naturalHeight;
+    const ratioDiff = Math.abs(ratio - TARGET_RATIO) / TARGET_RATIO;
+
+    let ratioStatus, ratioLabel;
+    if (ratioDiff < 0.05) {
+      ratioStatus = "pass";
+      ratioLabel = "Ratio: great fit";
+    } else if (ratioDiff < 0.2) {
+      ratioStatus = "warn";
+      ratioLabel = "Ratio: minor crop";
+    } else {
+      ratioStatus = "fail";
+      ratioLabel = "Ratio: heavy crop";
+    }
+
+    let resStatus, resLabel;
+    if (img.naturalWidth >= 1080 && img.naturalHeight >= 1920) {
+      resStatus = "pass";
+      resLabel = "Sharp resolution";
+    } else if (img.naturalWidth >= 720) {
+      resStatus = "warn";
+      resLabel = "May look soft";
+    } else {
+      resStatus = "fail";
+      resLabel = "Low resolution";
+    }
+
+    return {
+      ratio: { status: ratioStatus, label: ratioLabel },
+      resolution: { status: resStatus, label: resLabel }
+    };
+  }
+
+  function renderBatchItem(file, objectUrl, result) {
+    const item = document.createElement("div");
+    item.className = "batch-item";
+    item.innerHTML = `
+      <img alt="${file.name}" src="${objectUrl}" />
+      <div class="batch-item-meta">
+        <div class="batch-item-name">${file.name}</div>
+        <div class="batch-badges">
+          <span class="batch-badge ${result.ratio.status}">${result.ratio.label}</span>
+          <span class="batch-badge ${result.resolution.status}">${result.resolution.label}</span>
+        </div>
+      </div>
+    `;
+    batchGrid.appendChild(item);
+  }
+})();
