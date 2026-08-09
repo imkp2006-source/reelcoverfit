@@ -1264,3 +1264,119 @@ document.querySelectorAll('.surface-tab').forEach(button => button.addEventListe
   void surfaceCanvas.offsetWidth;
   surfaceCanvas.style.animation='surfaceReveal .22s ease';
 }));
+
+/* ---------- Batch Quick Check ---------- */
+(function setupBatchCheck() {
+  const batchDropzone = document.getElementById("batchDropzone");
+  const batchInput = document.getElementById("batchInput");
+  const batchGrid = document.getElementById("batchGrid");
+  if (!batchDropzone || !batchInput || !batchGrid) return;
+
+  const TARGET_RATIO = 9 / 16;
+
+  batchDropzone.addEventListener("click", () => batchInput.click());
+
+  batchDropzone.addEventListener("keydown", (event) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      batchInput.click();
+    }
+  });
+
+  batchInput.addEventListener("change", (event) => {
+    handleBatchFiles(event.target.files);
+  });
+
+  ["dragenter", "dragover"].forEach((eventName) => {
+    batchDropzone.addEventListener(eventName, (event) => {
+      event.preventDefault();
+      batchDropzone.classList.add("drag-over");
+    });
+  });
+
+  ["dragleave", "drop"].forEach((eventName) => {
+    batchDropzone.addEventListener(eventName, (event) => {
+      event.preventDefault();
+      batchDropzone.classList.remove("drag-over");
+    });
+  });
+
+  batchDropzone.addEventListener("drop", (event) => {
+    handleBatchFiles(event.dataTransfer.files);
+  });
+
+  function handleBatchFiles(fileList) {
+    const files = Array.from(fileList || []).filter((f) =>
+      /^image\/(jpeg|png)$/.test(f.type)
+    );
+    if (!files.length) return;
+
+    batchGrid.innerHTML = "";
+    trackEvent("batch_check_started", { file_count: files.length });
+
+    files.forEach((file) => {
+      const objectUrl = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = () => {
+        const result = scoreBatchImage(img);
+        renderBatchItem(file, objectUrl, result);
+        trackEvent("batch_item_checked", {
+          ratio_status: result.ratio.status,
+          resolution_status: result.resolution.status
+        });
+      };
+      img.onerror = () => URL.revokeObjectURL(objectUrl);
+      img.src = objectUrl;
+    });
+  }
+
+  function scoreBatchImage(img) {
+    const ratio = img.naturalWidth / img.naturalHeight;
+    const ratioDiff = Math.abs(ratio - TARGET_RATIO) / TARGET_RATIO;
+
+    let ratioStatus, ratioLabel;
+    if (ratioDiff < 0.05) {
+      ratioStatus = "pass";
+      ratioLabel = "Ratio: great fit";
+    } else if (ratioDiff < 0.2) {
+      ratioStatus = "warn";
+      ratioLabel = "Ratio: minor crop";
+    } else {
+      ratioStatus = "fail";
+      ratioLabel = "Ratio: heavy crop";
+    }
+
+    let resStatus, resLabel;
+    if (img.naturalWidth >= 1080 && img.naturalHeight >= 1920) {
+      resStatus = "pass";
+      resLabel = "Sharp resolution";
+    } else if (img.naturalWidth >= 720) {
+      resStatus = "warn";
+      resLabel = "May look soft";
+    } else {
+      resStatus = "fail";
+      resLabel = "Low resolution";
+    }
+
+    return {
+      ratio: { status: ratioStatus, label: ratioLabel },
+      resolution: { status: resStatus, label: resLabel }
+    };
+  }
+
+  function renderBatchItem(file, objectUrl, result) {
+    const item = document.createElement("div");
+    item.className = "batch-item";
+    item.innerHTML = `
+      <img alt="${file.name}" src="${objectUrl}" />
+      <div class="batch-item-meta">
+        <div class="batch-item-name">${file.name}</div>
+        <div class="batch-badges">
+          <span class="batch-badge ${result.ratio.status}">${result.ratio.label}</span>
+          <span class="batch-badge ${result.resolution.status}">${result.resolution.label}</span>
+        </div>
+      </div>
+    `;
+    batchGrid.appendChild(item);
+  }
+})();

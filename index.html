@@ -33,6 +33,7 @@
 <link href="/assets/logo.svg?v=4" rel="shortcut icon" type="image/svg+xml"/>
 <link href="style.css" rel="stylesheet"/>
 <script defer="" src="script.js"></script>
+
 <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -116,6 +117,7 @@
 <a data-track="nav_safe_zone_click" href="instagram-reel-thumbnail-safe-zone.html">Safe Zone</a>
 <a data-track="nav_faq_click" href="#faq">FAQ</a>
 </div>
+
 </nav>
 </header>
 <main>
@@ -323,6 +325,21 @@
 </div>
 </div>
 </div>
+</div>
+</section>
+<section class="section" id="batch-check">
+<div class="container">
+<div class="section-heading">
+<p class="eyebrow">Multiple covers?</p>
+<h2>Batch Quick Check</h2>
+<p>Upload several reel covers at once and get an instant pass / needs-adjustment reading for each — no need to check them one by one. For a detailed, adjustable crop preview, use the single-image tool above.</p>
+</div>
+<div class="batch-dropzone card" data-track="batch_dropzone_click" id="batchDropzone" role="button" tabindex="0">
+<p><strong>Drop multiple images here</strong> or click to select</p>
+<p class="small-text">JPG or PNG. Each image is checked against the standard 9:16 reel safe zone.</p>
+<input accept="image/jpeg,image/png" hidden="" id="batchInput" multiple="" type="file"/>
+</div>
+<div class="batch-grid" id="batchGrid"></div>
 </div>
 </section>
 <section class="section how-section">
@@ -576,5 +593,5 @@
 <a href="reel-cover-text-placement.html">Text Placement</a></div>
 </div>
 </footer>
-</body>
+<script src="animations.js"></script></body>
 </html>
