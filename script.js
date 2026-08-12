@@ -1134,6 +1134,37 @@ window.addEventListener("scroll", () => {
 const platformButtons = document.querySelectorAll(".platform-btn");
 const shareBox = document.getElementById("shareBox");
 const copySiteLinkBtn = document.getElementById("copySiteLinkBtn");
+const platformCoverStatus = document.getElementById("platformCoverStatus");
+const platformCoverIcon = document.getElementById("platformCoverIcon");
+const platformCoverNote = document.getElementById("platformCoverNote");
+
+const PLATFORM_COVER_GUIDANCE = {
+  "Instagram Reels": {
+    respectsCover: "yes",
+    icon: "✅",
+    note: "Posting directly in the Instagram app uses the exact cover you set. Your 9:16 crop and safe-zone text will show as designed."
+  },
+  "YouTube Shorts": {
+    respectsCover: "partial",
+    icon: "⚠️",
+    note: "YouTube lets you pick a custom thumbnail after upload in most regions, but the initial Shorts feed preview can still auto-select a frame. Set your thumbnail manually in YouTube Studio after publishing to be safe."
+  },
+  "TikTok": {
+    respectsCover: "partial",
+    icon: "⚠️",
+    note: "Posting natively in the TikTok app lets you manually choose a cover frame during upload \u2014 use that step. If you're cross-posting or auto-publishing from a third-party scheduler, TikTok may ignore the supplied cover and grab a random frame instead. Always check the published post."
+  },
+  "Facebook Reels": {
+    respectsCover: "no",
+    icon: "❌",
+    note: "Facebook Reels frequently ignores a custom cover carried over from cross-posting tools and grabs its own frame from the video instead. If the cover matters, upload and set the cover manually inside Facebook directly rather than relying on auto cross-posting."
+  },
+  "Pinterest": {
+    respectsCover: "yes",
+    icon: "✅",
+    note: "Pinterest's Video Pin format (1080 \u00d7 1920, 9:16) lets you choose a specific frame or upload a separate cover image when publishing natively. Idea Pins were retired in 2023 \u2014 this 9:16 format is now just a standard Video Pin."
+  }
+};
 
 platformButtons.forEach((button) => {
   button.addEventListener("click", () => {
@@ -1145,12 +1176,22 @@ platformButtons.forEach((button) => {
     button.setAttribute("aria-pressed", "true");
 
     const platform = button.dataset.platform;
+    const guidance = PLATFORM_COVER_GUIDANCE[platform];
 
-    recommendationText.textContent =
-      `${platform} selected. Use a vertical 9:16 cover and keep text near the center safe zone.`;
+    if (recommendationText) {
+      recommendationText.textContent =
+        `${platform} selected. Use a vertical 9:16 cover and keep text near the center safe zone.`;
+    }
+
+    if (guidance && platformCoverStatus && platformCoverIcon && platformCoverNote) {
+      platformCoverStatus.dataset.status = guidance.respectsCover;
+      platformCoverIcon.textContent = guidance.icon;
+      platformCoverNote.textContent = guidance.note;
+    }
 
     trackEvent("platform_selected", {
-      platform
+      platform,
+      respects_cover: guidance ? guidance.respectsCover : "unknown"
     });
   });
 });
@@ -1184,7 +1225,8 @@ const surfaceConfig = {
   "instagram-grid": { width:1080, height:1080, label:"Profile Grid · 1:1", advice:"This center crop shows what may remain visible on a square profile grid." },
   "instagram-explore": { width:1080, height:1350, label:"Instagram Explore · 4:5", advice:"The 4:5 preview helps you protect titles and faces in portrait discovery surfaces." },
   "youtube-shorts": { width:1080, height:1920, label:"YouTube Shorts · 9:16", advice:"Use the center area for titles because player controls can cover edge content." },
-  "tiktok": { width:1080, height:1920, label:"TikTok · 9:16", advice:"Keep text away from the right-side action rail and bottom caption area." }
+  "tiktok": { width:1080, height:1920, label:"TikTok · 9:16", advice:"Keep text away from the right-side action rail and bottom caption area." },
+  "pinterest": { width:1080, height:1920, label:"Pinterest Video Pin · 9:16", advice:"Pinterest's feed crops aggressively on the sides in some layouts \u2014 keep key text and faces centered." }
 };
 
 function drawSurfacePreview() {
