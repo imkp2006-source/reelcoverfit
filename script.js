@@ -20,6 +20,26 @@ const state = {
 
 const imageInput = document.getElementById("imageInput");
 const dropZone = document.getElementById("dropZone");
+const workflowStatus = document.getElementById("workflowStatus");
+
+function updateWorkflowStatus(step, message) {
+    if (!workflowStatus) return;
+    const title = workflowStatus.querySelector("strong");
+    const text = workflowStatus.querySelector("span");
+    if (title) title.textContent = `Step ${step} of 3`;
+    if (text) text.textContent = message;
+}
+
+function refreshWorkflowStatus() {
+    if (!state.image) {
+        updateWorkflowStatus(1, "Upload a Reel cover to begin.");
+    } else if (state.resultBlob) {
+        updateWorkflowStatus(3, "Your cover is ready. Download it or adjust it again.");
+    } else {
+        updateWorkflowStatus(2, "Check the safe zone and grid crop, then download your cover.");
+    }
+}
+
 const statusMessage = document.getElementById("statusMessage");
 const dimensionResult = document.getElementById("dimensionResult");
 const ratioResult = document.getElementById("ratioResult");
@@ -566,6 +586,7 @@ function downloadPreview() {
 }
 
 function resetTool() {
+    updateWorkflowStatus(1, "Upload a Reel cover to begin.");
   state.image = null;
   state.fileName = "";
   state.showSafeZone = true;
