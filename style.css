@@ -1,5 +1,5 @@
 /* ==========================================================================
-   ReelCoverFit Design System — Phase 2
+   ReelCoverFit Design System — Phase 2 & 3
    Modern Creator-Tool Aesthetic: Purple/Violet, Soft Pink, Clean Off-White
    ========================================================================== */
 
@@ -121,6 +121,7 @@ body {
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
 }
 
 img,
@@ -157,7 +158,7 @@ h6 {
 }
 
 h1 {
-  font-size: clamp(2.4rem, 6vw, 4.4rem);
+  font-size: clamp(2.35rem, 5.5vw, 4.2rem);
   letter-spacing: -0.045em;
   line-height: 1.1;
 }
@@ -222,6 +223,11 @@ p:last-child {
   margin-bottom: 34px;
 }
 
+.section-heading.text-center {
+  margin-inline: auto;
+  text-align: center;
+}
+
 .section-heading p:not(.eyebrow) {
   color: var(--muted);
   font-size: 1.08rem;
@@ -238,7 +244,9 @@ p:last-child {
 .resource-card,
 .legal-card,
 .article-card,
-.seo-content-card {
+.seo-content-card,
+.tool-card,
+.platform-card {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -253,7 +261,7 @@ p:last-child {
   position: sticky;
   top: 0;
   z-index: 100;
-  background: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.92);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border-bottom: 1px solid var(--border);
@@ -265,8 +273,9 @@ p:last-child {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 20px;
+  gap: 16px;
   padding: 8px 0;
+  position: relative;
 }
 
 .logo {
@@ -278,6 +287,7 @@ p:last-child {
   letter-spacing: -0.03em;
   color: var(--text);
   text-decoration: none;
+  flex-shrink: 0;
 }
 
 .logo span {
@@ -316,7 +326,7 @@ p:last-child {
 .nav-links {
   display: none;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   color: var(--text-secondary);
   font-weight: 650;
   font-size: 0.94rem;
@@ -334,10 +344,121 @@ p:last-child {
   background: var(--primary-soft);
 }
 
-@media (min-width: 720px) {
+.nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.nav-cta {
+  padding: 9px 18px;
+  min-height: 40px;
+  font-size: 0.88rem;
+  font-weight: 750;
+  box-shadow: 0 6px 18px rgba(124, 58, 237, 0.2);
+}
+
+.nav-toggle {
+  display: none;
+  width: 42px;
+  height: 42px;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  cursor: pointer;
+  padding: 0;
+  transition: background var(--transition-fast), border-color var(--transition-fast);
+}
+
+.nav-toggle:hover {
+  background: var(--surface-soft);
+  border-color: var(--border-hover);
+}
+
+.nav-toggle-icon {
+  position: relative;
+  width: 20px;
+  height: 2px;
+  background: var(--text);
+  border-radius: 2px;
+  transition: background var(--transition-fast);
+}
+
+.nav-toggle-icon::before,
+.nav-toggle-icon::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  width: 20px;
+  height: 2px;
+  background: var(--text);
+  border-radius: 2px;
+  transition: transform var(--transition-fast), top var(--transition-fast);
+}
+
+.nav-toggle-icon::before { top: -6px; }
+.nav-toggle-icon::after { top: 6px; }
+
+.nav-toggle[aria-expanded="true"] .nav-toggle-icon {
+  background: transparent;
+}
+.nav-toggle[aria-expanded="true"] .nav-toggle-icon::before {
+  top: 0;
+  transform: rotate(45deg);
+}
+.nav-toggle[aria-expanded="true"] .nav-toggle-icon::after {
+  top: 0;
+  transform: rotate(-45deg);
+}
+
+@media (min-width: 768px) {
   .nav-links {
     display: flex;
   }
+}
+
+@media (max-width: 767px) {
+  .nav-toggle {
+    display: flex;
+  }
+  .nav-links {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 20px 22px;
+    box-shadow: var(--shadow-xl);
+    flex-direction: column;
+    gap: 6px;
+    z-index: 1000;
+  }
+  .nav-links.is-open {
+    display: flex;
+    animation: navFadeDown 0.2s ease-out;
+  }
+  .nav-links a {
+    display: block;
+    padding: 11px 16px;
+    width: 100%;
+    border-radius: var(--radius-sm);
+    font-size: 1rem;
+    font-weight: 650;
+  }
+  .nav-cta {
+    padding: 8px 14px;
+    font-size: 0.84rem;
+  }
+}
+
+@keyframes navFadeDown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 /* --------------------------------------------------------------------------
@@ -462,6 +583,7 @@ summary:focus-visible,
   padding-top: 76px;
   padding-bottom: 72px;
   background: var(--accent-glow);
+  position: relative;
 }
 
 .hero-grid {
@@ -497,18 +619,31 @@ summary:focus-visible,
 .hero-card {
   display: flex;
   justify-content: center;
+  position: relative;
 }
 
 .mock-phone {
   position: relative;
-  width: min(280px, 72vw);
+  width: min(290px, 72vw);
   aspect-ratio: 9 / 16;
-  border-radius: 38px;
-  background: linear-gradient(180deg, rgba(15, 23, 42, 0.25), rgba(15, 23, 42, 0.65)),
+  border-radius: 40px;
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.35), rgba(15, 23, 42, 0.75)),
               linear-gradient(135deg, #f97316 0%, #ec4899 50%, #7c3aed 100%);
   box-shadow: var(--shadow-xl);
   overflow: hidden;
   border: 10px solid #0f172a;
+}
+
+.mock-phone-notch {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 72px;
+  height: 14px;
+  background: #0f172a;
+  border-radius: 999px;
+  z-index: 5;
 }
 
 .mock-safe-zone {
@@ -517,7 +652,7 @@ summary:focus-visible,
   right: 14%;
   top: 22%;
   bottom: 25%;
-  border: 2px dashed rgba(255, 255, 255, 0.9);
+  border: 2px dashed rgba(255, 255, 255, 0.92);
   border-radius: 18px;
   display: grid;
   place-items: center;
@@ -525,6 +660,33 @@ summary:focus-visible,
   font-weight: 850;
   font-size: 1rem;
   text-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+  z-index: 2;
+}
+
+.mock-grid-crop-indicator {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  height: min(290px, 72vw);
+  border-top: 1.5px dashed rgba(255, 255, 255, 0.6);
+  border-bottom: 1.5px dashed rgba(255, 255, 255, 0.6);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.mock-grid-crop-indicator::after {
+  content: "1:1 Profile Crop";
+  position: absolute;
+  right: 10px;
+  top: 8px;
+  font-size: 0.68rem;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.85);
+  background: rgba(15, 23, 42, 0.65);
+  padding: 3px 7px;
+  border-radius: 6px;
 }
 
 .mock-ui {
@@ -532,20 +694,237 @@ summary:focus-visible,
   left: 0;
   right: 0;
   background: rgba(239, 68, 68, 0.24);
+  z-index: 3;
 }
 
 .mock-ui.top {
   top: 0;
-  height: 15%;
+  height: 16%;
 }
 
 .mock-ui.bottom {
   bottom: 0;
-  height: 20%;
+  height: 22%;
+}
+
+.mock-phone-badge {
+  position: absolute;
+  bottom: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(15, 23, 42, 0.88);
+  backdrop-filter: blur(8px);
+  color: #ffffff;
+  font-size: 0.78rem;
+  font-weight: 800;
+  padding: 6px 14px;
+  border-radius: var(--radius-full);
+  white-space: nowrap;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3);
+  z-index: 4;
 }
 
 /* --------------------------------------------------------------------------
-   7. Tool & Editor Workspace
+   7. Tools Overview Grid Section (Phase 3)
+   -------------------------------------------------------------------------- */
+.tools-overview-section {
+  padding: 64px 0 72px;
+  background: var(--bg);
+}
+
+.tools-grid {
+  display: grid;
+  gap: 22px;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 640px) {
+  .tools-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .tools-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.tool-card {
+  position: relative;
+  padding: 28px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  transition: transform var(--transition-normal), box-shadow var(--transition-normal), border-color var(--transition-normal);
+}
+
+.tool-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--primary-border);
+}
+
+.tool-card-icon {
+  width: 50px;
+  height: 50px;
+  display: grid;
+  place-items: center;
+  border-radius: 16px;
+  background: var(--primary-light);
+  font-size: 1.4rem;
+  margin-bottom: 16px;
+  box-shadow: 0 4px 14px rgba(124, 58, 237, 0.14);
+}
+
+.tool-card-badge {
+  display: inline-flex;
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  background: var(--surface-soft);
+  color: var(--muted);
+  border: 1px solid var(--border);
+  font-size: 0.74rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 12px;
+}
+
+.tool-card h3 {
+  margin: 0 0 10px;
+  font-size: 1.25rem;
+}
+
+.tool-card p {
+  color: var(--muted);
+  font-size: 0.92rem;
+  line-height: 1.55;
+  margin: 0 0 16px;
+  flex-grow: 1;
+}
+
+.tool-card .text-link {
+  margin-top: auto;
+}
+
+/* --------------------------------------------------------------------------
+   8. Platform Compatibility Showcase (Phase 3)
+   -------------------------------------------------------------------------- */
+.platform-compatibility-section {
+  padding: 68px 0;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+
+.platform-cards-grid {
+  display: grid;
+  gap: 20px;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 640px) {
+  .platform-cards-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .platform-cards-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.platform-card {
+  padding: 24px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-xs);
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast), border-color var(--transition-fast);
+}
+
+.platform-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--border-hover);
+}
+
+.platform-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.platform-card-header h3 {
+  font-size: 1.15rem;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.platform-badge {
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  font-size: 0.75rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.platform-badge.verified {
+  background: var(--success-light);
+  color: var(--success-text);
+  border: 1px solid var(--success-border);
+}
+
+.platform-badge.partial {
+  background: var(--warning-light);
+  color: var(--warning-text);
+  border: 1px solid var(--warning-border);
+}
+
+.platform-badge.manual {
+  background: var(--danger-light);
+  color: var(--danger-text);
+  border: 1px solid var(--danger-border);
+}
+
+.platform-card p {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  line-height: 1.55;
+  margin: 0;
+}
+
+.platform-specs {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--border);
+}
+
+.platform-spec-tag {
+  display: inline-flex;
+  font-size: 0.75rem;
+  font-weight: 750;
+  color: var(--muted);
+  background: var(--surface);
+  padding: 3px 8px;
+  border-radius: var(--radius-xs);
+  border: 1px solid var(--border);
+}
+
+/* --------------------------------------------------------------------------
+   9. Tool & Editor Workspace (Phase 4 scope preserved)
    -------------------------------------------------------------------------- */
 .tool-section {
   padding-top: 56px;
@@ -701,7 +1080,7 @@ summary:focus-visible,
 }
 
 /* --------------------------------------------------------------------------
-   8. Creator Score & Thumbnail Quality Analyzer
+   10. Creator Score & Thumbnail Quality Analyzer
    -------------------------------------------------------------------------- */
 .creator-score-card {
   margin-top: 20px;
@@ -1036,7 +1415,7 @@ summary:focus-visible,
 }
 
 /* --------------------------------------------------------------------------
-   9. Manual Crop Studio & Controls
+   11. Manual Crop Studio & Controls
    -------------------------------------------------------------------------- */
 .crop-studio {
   margin-top: 22px;
@@ -1141,7 +1520,7 @@ summary:focus-visible,
 }
 
 /* --------------------------------------------------------------------------
-   10. Platform Guidance & Multi-Surface Tabs
+   12. Platform Guidance & Multi-Surface Tabs
    -------------------------------------------------------------------------- */
 .creator-tools-box {
   margin-top: 22px;
@@ -1289,7 +1668,7 @@ summary:focus-visible,
 }
 
 /* --------------------------------------------------------------------------
-   11. Previews & Canvas Viewport
+   13. Previews & Canvas Viewport
    -------------------------------------------------------------------------- */
 .preview-panel {
   display: grid;
@@ -1526,7 +1905,7 @@ summary:focus-visible,
 }
 
 /* --------------------------------------------------------------------------
-   12. Batch Quick Check
+   14. Batch Quick Check
    -------------------------------------------------------------------------- */
 .batch-dropzone {
   border: 2px dashed #cbd5e1;
@@ -1610,7 +1989,7 @@ summary:focus-visible,
 .batch-badge.fail { background: var(--danger-light); color: var(--danger-text); }
 
 /* --------------------------------------------------------------------------
-   13. Process Steps & Information Cards
+   15. Process Steps & Information Cards
    -------------------------------------------------------------------------- */
 .steps-grid,
 .info-grid {
@@ -1691,7 +2070,7 @@ summary:focus-visible,
 }
 
 /* --------------------------------------------------------------------------
-   14. Resource Cards & Guide Links
+   16. Resource Cards & Guide Links
    -------------------------------------------------------------------------- */
 .resource-section {
   padding-top: 48px;
@@ -1732,7 +2111,7 @@ summary:focus-visible,
 }
 
 /* --------------------------------------------------------------------------
-   15. Educational Article & Legal Pages
+   17. Educational Article & Legal Pages
    -------------------------------------------------------------------------- */
 .seo-content-section {
   padding-top: 48px;
@@ -1897,7 +2276,7 @@ summary:focus-visible,
 }
 
 /* --------------------------------------------------------------------------
-   16. FAQ Accordion
+   18. FAQ Accordion
    -------------------------------------------------------------------------- */
 .faq-list {
   display: grid;
@@ -1940,7 +2319,7 @@ details p {
 }
 
 /* --------------------------------------------------------------------------
-   17. Feedback & Footer
+   19. Feedback & Footer
    -------------------------------------------------------------------------- */
 .feedback-card {
   padding: 36px 28px;
@@ -1992,7 +2371,7 @@ details p {
 }
 
 /* --------------------------------------------------------------------------
-   18. Scroll Reveal & Hover Micro-Interactions
+   20. Scroll Reveal & Hover Micro-Interactions
    -------------------------------------------------------------------------- */
 .reveal-on-scroll {
   opacity: 0;
@@ -2015,7 +2394,7 @@ details p {
 }
 
 /* --------------------------------------------------------------------------
-   19. Responsive Layout Breakpoints
+   21. Responsive Layout Breakpoints
    -------------------------------------------------------------------------- */
 @media (min-width: 720px) {
   .steps-grid {
@@ -2150,7 +2529,7 @@ details p {
   }
 
   h1 {
-    font-size: clamp(2rem, 9vw, 2.75rem);
+    font-size: clamp(2rem, 8.5vw, 2.65rem);
   }
 
   .hero {
@@ -2180,7 +2559,7 @@ details p {
 }
 
 /* --------------------------------------------------------------------------
-   20. Reduced Motion Accessibility
+   22. Reduced Motion Accessibility
    -------------------------------------------------------------------------- */
 @media (prefers-reduced-motion: reduce) {
   *,

@@ -1,9 +1,12 @@
 (function () {
   "use strict";
 
+  /* --------------------------------------------------------------------------
+     1. Scroll Reveal Intersection Observer
+     -------------------------------------------------------------------------- */
   function initScrollReveal() {
     var targets = document.querySelectorAll(
-      ".resource-card, .size-card, .info-card, .article-card, .feedback-card"
+      ".resource-card, .size-card, .info-card, .article-card, .feedback-card, .tool-card, .platform-card, .step-card"
     );
     if (!targets.length) return;
 
@@ -29,5 +32,54 @@
     targets.forEach(function (el) { observer.observe(el); });
   }
 
-  document.addEventListener("DOMContentLoaded", initScrollReveal);
+  /* --------------------------------------------------------------------------
+     2. Responsive Mobile Navigation
+     -------------------------------------------------------------------------- */
+  function initMobileNav() {
+    var navToggle = document.getElementById("navToggle");
+    var navLinks = document.getElementById("navLinks");
+    if (!navToggle || !navLinks) return;
+
+    function setMenuState(open) {
+      navToggle.setAttribute("aria-expanded", open ? "true" : "false");
+      navLinks.classList.toggle("is-open", open);
+      document.body.classList.toggle("nav-open", open);
+    }
+
+    navToggle.addEventListener("click", function (event) {
+      event.stopPropagation();
+      var isOpen = navToggle.getAttribute("aria-expanded") === "true";
+      setMenuState(!isOpen);
+    });
+
+    // Close on navigation link click
+    var links = navLinks.querySelectorAll("a");
+    links.forEach(function (link) {
+      link.addEventListener("click", function () {
+        setMenuState(false);
+      });
+    });
+
+    // Close on Escape key
+    document.addEventListener("keydown", function (event) {
+      if (event.key === "Escape" && navToggle.getAttribute("aria-expanded") === "true") {
+        setMenuState(false);
+        navToggle.focus();
+      }
+    });
+
+    // Close on outside click
+    document.addEventListener("click", function (event) {
+      if (navToggle.getAttribute("aria-expanded") === "true") {
+        if (!navLinks.contains(event.target) && !navToggle.contains(event.target)) {
+          setMenuState(false);
+        }
+      }
+    });
+  }
+
+  document.addEventListener("DOMContentLoaded", function () {
+    initScrollReveal();
+    initMobileNav();
+  });
 })();
