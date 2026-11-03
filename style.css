@@ -924,10 +924,246 @@ summary:focus-visible,
 }
 
 /* --------------------------------------------------------------------------
-   9. Tool & Editor Workspace (Phase 4 scope preserved)
+   9. Tool & Editor Workspace (Phase 4 Creator Studio)
    -------------------------------------------------------------------------- */
 .tool-section {
   padding-top: 56px;
+  background: linear-gradient(180deg, var(--bg) 0%, var(--surface-soft) 100%);
+}
+
+.studio-container {
+  max-width: 1480px;
+  width: 100%;
+  margin: 0 auto;
+  padding-left: 24px;
+  padding-right: 24px;
+}
+
+.studio-heading {
+  margin-bottom: 24px;
+}
+
+.studio-workspace {
+  display: grid;
+  grid-template-columns: 340px 1fr 360px;
+  gap: 24px;
+  align-items: start;
+}
+
+.studio-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.studio-group {
+  padding: 22px;
+}
+
+.studio-group-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.studio-group-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: var(--surface-soft);
+  display: grid;
+  place-items: center;
+  font-size: 1.2rem;
+  flex-shrink: 0;
+  box-shadow: var(--shadow-xs);
+}
+
+.studio-group h3 {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 750;
+  color: var(--text);
+  line-height: 1.25;
+}
+
+.studio-group .small-text {
+  margin: 2px 0 0;
+}
+
+.crop-studio-titles {
+  flex: 1;
+}
+
+.overlay-toggles-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.overlay-toggles-grid .btn,
+.overlay-toggles-grid .overlay-toggle {
+  width: 100%;
+  justify-content: center;
+  text-align: center;
+  padding: 9px 8px;
+  font-size: 0.85rem;
+}
+
+.crop-slider-wrap {
+  margin-top: 12px;
+}
+
+.export-actions-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.btn-block {
+  width: 100%;
+  justify-content: center;
+}
+
+.btn-sm {
+  padding: 8px 14px;
+  font-size: 0.88rem;
+}
+
+/* Center Panel Main Preview */
+.studio-panel-center .main-preview-card {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.preview-title-block {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.preview-title-block h3 {
+  margin: 0;
+}
+
+.preview-header-tags {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.studio-live-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.22);
+  animation: liveDotPulse 2s ease-in-out infinite;
+}
+
+@keyframes liveDotPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.45; transform: scale(0.92); }
+}
+
+.tag-accent {
+  background: #fdf2f8;
+  color: #be185d;
+  border: 1px solid #fbcfe8;
+  font-weight: 750;
+}
+
+.tag-subtle {
+  background: var(--surface-soft);
+  color: var(--muted);
+  border: 1px solid var(--border);
+  font-weight: 650;
+}
+
+.studio-canvas-wrap {
+  width: 100%;
+  max-width: 380px;
+  min-height: 580px;
+  aspect-ratio: 9 / 16;
+  position: relative;
+  display: grid;
+  place-items: center;
+  margin: 20px auto 16px;
+  border-radius: 22px;
+  overflow: hidden;
+  background: #090d16;
+  box-shadow: 0 24px 50px -12px rgba(15, 23, 42, 0.38), 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+.studio-canvas-wrap #reelCanvas {
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  aspect-ratio: 9 / 16;
+  display: none;
+  border-radius: 20px;
+  object-fit: contain;
+}
+
+.empty-features-list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px 14px;
+  margin: 14px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.82rem;
+  color: var(--muted);
+  text-align: left;
+}
+
+.empty-features-list li::before {
+  content: "✓ ";
+  color: var(--primary);
+  font-weight: 800;
+}
+
+.preview-footer-hints {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  font-size: 0.84rem;
+  color: var(--muted);
+  margin-top: 14px;
+  font-weight: 600;
+}
+
+/* Secondary Previews Dock */
+.studio-secondary-dock {
+  margin-top: 56px;
+  padding-top: 48px;
+  border-top: 1px solid var(--border);
+}
+
+.secondary-dock-heading {
+  margin-bottom: 28px;
+}
+
+.secondary-previews-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+.preview-card-hint {
+  margin: 14px 0 0;
+  font-size: 0.84rem;
+  color: var(--muted);
+  line-height: 1.45;
+  text-align: center;
 }
 
 .tool-layout {
@@ -2555,6 +2791,71 @@ details p {
 
   #reelCanvas {
     width: min(100%, 280px);
+  }
+}
+
+/* Studio Workspace Responsive Breakpoints (Phase 4) */
+@media (max-width: 1260px) {
+  .studio-workspace {
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+
+  .studio-panel-center {
+    grid-column: 1 / -1;
+    order: -1;
+  }
+
+  .studio-canvas-wrap {
+    max-width: 340px;
+    min-height: 520px;
+  }
+}
+
+@media (max-width: 860px) {
+  .studio-workspace {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .secondary-previews-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .studio-canvas-wrap {
+    max-width: 320px;
+    min-height: 480px;
+  }
+
+  .studio-container {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .studio-canvas-wrap {
+    max-width: 270px;
+    min-height: 400px;
+  }
+
+  .preview-footer-hints {
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .empty-features-list {
+    grid-template-columns: 1fr;
+  }
+
+  .overlay-toggles-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .preview-header-tags {
+    margin-top: 4px;
   }
 }
 

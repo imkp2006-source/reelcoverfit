@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120" fill="none">
+  <defs>
+    <linearGradient id="rcf-icon-grad" x1="10" y1="10" x2="110" y2="110" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#7C3AED" />
+      <stop offset="60%" stop-color="#EC4899" />
+      <stop offset="100%" stop-color="#F97316" />
+    </linearGradient>
+    <filter id="rcf-shadow" x="-10%" y="-10%" width="120%" height="125%" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#7C3AED" flood-opacity="0.32" />
+    </filter>
+    <filter id="play-shadow" x="-20%" y="-20%" width="140%" height="140%" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#000000" flood-opacity="0.2" />
+    </filter>
+  </defs>
+
+  <!-- App Icon Squircle Background -->
+  <rect width="120" height="120" rx="30" fill="url(#rcf-icon-grad)" filter="url(#rcf-shadow)" />
+
+  <!-- Subtle Inner Border Highlight -->
+  <rect x="1.5" y="1.5" width="117" height="117" rx="28.5" stroke="#FFFFFF" stroke-width="1.5" stroke-opacity="0.25" />
+
+  <!-- Crop-Frame Corner Brackets -->
+  <path d="M 26 42 L 26 28 C 26 26.9 26.9 26 28 26 L 42 26" stroke="#FFFFFF" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" />
+  <path d="M 78 26 L 92 26 C 93.1 26 94 26.9 94 28 L 94 42" stroke="#FFFFFF" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" />
+  <path d="M 26 78 L 26 92 C 26 93.1 26.9 94 28 94 L 42 94" stroke="#FFFFFF" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" />
+  <path d="M 78 94 L 92 94 C 93.1 94 94 93.1 94 92 L 94 78" stroke="#FFFFFF" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" />
+
+  <!-- Subtle Mountain / Photo Horizon Detail -->
+  <path d="M 32 86 L 46 70 C 47.5 68.3 50.1 68.3 51.6 70 L 59 78 C 60.5 79.6 63 79.6 64.5 78 L 74 67 C 75.5 65.4 78 65.4 79.5 67 L 88 77" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.4" />
+  <circle cx="42" cy="56" r="4" fill="#FFFFFF" fill-opacity="0.45" />
+
+  <!-- Center Play Symbol -->
+  <path d="M 52 46.5 C 52 44.8 53.9 43.8 55.4 44.7 L 76.2 57.2 C 77.6 58.1 77.6 60.1 76.2 61 L 55.4 73.5 C 53.9 74.4 52 73.4 52 71.7 Z" fill="#FFFFFF" filter="url(#play-shadow)" />
+
+  <!-- Sparkle Accent (Top-Right) -->
+  <path d="M 86 32 C 86 36.5 89.5 39 94 39 C 89.5 39 86 41.5 86 46 C 86 41.5 82.5 39 78 39 C 82.5 39 86 36.5 86 32 Z" fill="#FFFFFF" />
+</svg>

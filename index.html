@@ -28,8 +28,8 @@
     gtag('js', new Date());
     gtag('config', 'G-N8PHKB7N4S');
   </script>
-  <link href="/assets/logo.svg?v=4" rel="icon" type="image/svg+xml"/>
-  <link href="/assets/logo.svg?v=4" rel="shortcut icon" type="image/svg+xml"/>
+  <link href="/assets/favicon.svg" rel="icon" type="image/svg+xml"/>
+  <link href="/assets/favicon.svg" rel="shortcut icon" type="image/svg+xml"/>
   <link href="style.css" rel="stylesheet"/>
   <script defer="" src="script.js"></script>
 
@@ -110,7 +110,7 @@
   <header class="site-header">
     <nav aria-label="Main navigation" class="nav container">
       <a aria-label="ReelCoverFit home" class="logo" href="/">
-        <img alt="ReelCoverFit logo" class="logo-img" src="assets/logo.svg"/>
+        <img alt="ReelCoverFit logo" class="logo-img" src="assets/logo-icon.svg"/>
         <span>ReelCoverFit</span>
       </a>
 
@@ -180,40 +180,179 @@
           </p>
         </div>
 
-        <div class="tool-layout">
-          <div class="upload-panel card">
-            <h3>Upload Image</h3>
-            <p class="small-text">
-              Supported: JPG, PNG, WebP, GIF. Max file size: 10 MB.
-            </p>
-            <div aria-label="Upload reel cover image" class="drop-zone" id="dropZone" role="button" tabindex="0">
-              <input accept="image/*" aria-label="Choose reel cover image" id="imageInput" type="file"/>
-              <div class="drop-icon" aria-hidden="true">⬆</div>
-              <strong>Click to upload</strong>
-              <span>or drag and drop your image here</span>
-            </div>
-            <p class="privacy-note">
-              Your image is processed only inside your browser. It is not uploaded to any server.
-            </p>
-            <div class="status-message" id="statusMessage" role="status">
-              Upload an image to start checking.
-            </div>
-            <div class="result-box">
-              <div>
-                <span class="result-label">Image size</span>
-                <strong id="dimensionResult">Not uploaded</strong>
-              </div>
-              <div>
-                <span class="result-label">9:16 check</span>
-                <strong id="ratioResult">Waiting</strong>
-              </div>
-            </div>
-            <p class="recommendation" id="recommendationText">
-              Tip: Keep important text, face, and logo away from the top and bottom edges.
-            </p>
+        <!-- 3-Panel Studio Workspace -->
+        <div class="studio-workspace">
 
-            <!-- Creator Report Card -->
-            <div aria-live="polite" class="creator-score-card" id="creatorScoreCard">
+          <!-- ================================================================
+               LEFT PANEL: Editing Controls
+               ================================================================ -->
+          <aside class="studio-panel studio-panel-left" aria-label="Editing Controls">
+
+            <!-- Cover Image Group -->
+            <div class="card studio-group">
+              <div class="studio-group-header">
+                <span class="studio-group-icon" aria-hidden="true">🖼️</span>
+                <div>
+                  <h3>Cover Image</h3>
+                  <p class="small-text">JPG, PNG, WebP, GIF up to 10 MB</p>
+                </div>
+              </div>
+              <div aria-label="Upload reel cover image" class="drop-zone" id="dropZone" role="button" tabindex="0">
+                <input accept="image/*" aria-label="Choose reel cover image" id="imageInput" type="file"/>
+                <div class="drop-icon" aria-hidden="true">⬆</div>
+                <strong>Click to upload</strong>
+                <span>or drag and drop your image here</span>
+              </div>
+              <p class="privacy-note">
+                Your image is processed only inside your browser. It is not uploaded to any server.
+              </p>
+              <div class="status-message" id="statusMessage" role="status">
+                Upload an image to start checking.
+              </div>
+              <div class="result-box">
+                <div>
+                  <span class="result-label">Image size</span>
+                  <strong id="dimensionResult">Not uploaded</strong>
+                </div>
+                <div>
+                  <span class="result-label">9:16 check</span>
+                  <strong id="ratioResult">Waiting</strong>
+                </div>
+              </div>
+              <p class="recommendation" id="recommendationText">
+                Tip: Keep important text, face, and logo away from the top and bottom edges.
+              </p>
+            </div>
+
+            <!-- Crop & Positioning Group -->
+            <div aria-labelledby="cropStudioTitle" class="card studio-group crop-studio" id="cropStudio">
+              <div class="studio-group-header">
+                <span class="studio-group-icon" aria-hidden="true">✂️</span>
+                <div class="crop-studio-titles">
+                  <span class="result-label">Composition</span>
+                  <h3 id="cropStudioTitle">Position &amp; Zoom</h3>
+                </div>
+                <span class="crop-zoom-value" id="zoomValue">100%</span>
+              </div>
+              <p class="small-text">Drag directly inside the 9:16 preview. Use slider or mouse wheel to zoom.</p>
+
+              <div class="crop-slider-wrap">
+                <label class="crop-label" for="zoomRange">Zoom Scale</label>
+                <input class="crop-range" disabled="" id="zoomRange" max="300" min="100" step="1" type="range" value="100"/>
+              </div>
+
+              <div class="crop-actions">
+                <button class="btn btn-secondary btn-sm" disabled="" id="resetCropBtn" type="button">Reset Crop</button>
+                <button aria-pressed="true" class="overlay-toggle active btn-sm" disabled="" id="toggleSnapBtn" type="button">Snap to Center</button>
+              </div>
+              <span class="crop-hint">💡 Drag on Reel preview • Double-click to reset</span>
+            </div>
+
+            <!-- Guides & Overlays Group -->
+            <div class="card studio-group">
+              <div class="studio-group-header">
+                <span class="studio-group-icon" aria-hidden="true">📐</span>
+                <div>
+                  <span class="result-label">Visual Aids</span>
+                  <h3>Guides &amp; Overlays</h3>
+                </div>
+              </div>
+              <p class="small-text">Toggle composition guides to keep key subjects visible.</p>
+              <div class="overlay-toggles-grid">
+                <button aria-pressed="true" class="btn btn-secondary btn-sm" disabled="" id="toggleSafeBtn" type="button">
+                  Safe Zone
+                </button>
+                <button aria-pressed="true" class="overlay-toggle active btn-sm" disabled="" id="toggleThirdsBtn" type="button">
+                  Rule of Thirds
+                </button>
+                <button aria-pressed="true" class="overlay-toggle active btn-sm" disabled="" id="toggleFaceGuideBtn" type="button">
+                  Face Guide
+                </button>
+                <button aria-pressed="true" class="btn btn-secondary btn-sm" disabled="" id="toggleGridBtn" type="button">
+                  Grid Overlay
+                </button>
+              </div>
+            </div>
+
+            <!-- Export & Download Group -->
+            <div class="card studio-group">
+              <div class="studio-group-header">
+                <span class="studio-group-icon" aria-hidden="true">💾</span>
+                <div>
+                  <span class="result-label">Production</span>
+                  <h3>Export Cover</h3>
+                </div>
+              </div>
+
+              <div id="workflowStatus" class="workflow-status" aria-live="polite">
+                <strong>Step 1 of 3</strong><span>Upload a Reel cover to begin.</span>
+              </div>
+
+              <div class="export-actions-stack">
+                <button class="btn btn-primary btn-block" disabled="" id="downloadBtn" type="button">
+                  Download Instagram-Ready Cover
+                </button>
+                <button class="btn btn-danger btn-sm btn-block" disabled="" id="resetBtn" type="button">
+                  Reset Workspace
+                </button>
+              </div>
+
+              <div class="share-box" hidden="" id="shareBox">
+                <h3>Preview downloaded 🎉</h3>
+                <p>Share ReelCoverFit with another creator.</p>
+                <button class="btn btn-secondary btn-sm" id="copySiteLinkBtn" type="button">Copy Website Link</button>
+              </div>
+            </div>
+
+          </aside>
+
+          <!-- ================================================================
+               CENTER PANEL: Main Preview Workspace
+               ================================================================ -->
+          <div class="studio-panel studio-panel-center" aria-label="Cover Preview Canvas">
+            <div class="card main-preview-card">
+              <div class="preview-header">
+                <div class="preview-title-block">
+                  <span class="studio-live-dot" aria-hidden="true"></span>
+                  <h3>9:16 Reel Preview</h3>
+                </div>
+                <div class="preview-header-tags">
+                  <span class="tag tag-accent">1080 × 1920</span>
+                  <span class="tag tag-subtle">Aspect 9:16</span>
+                </div>
+              </div>
+
+              <div class="canvas-wrap studio-canvas-wrap">
+                <canvas aria-label="Interactive Reel cover crop preview. Drag to reposition the image." height="1920" id="reelCanvas" width="1080"></canvas>
+                <div class="empty-preview" id="emptyPreview">
+                  <div class="premium-empty-state">
+                    <span aria-hidden="true" class="empty-state-icon">▣</span>
+                    <strong>Drop your Reel cover</strong>
+                    <p>We’ll check safe zones, crop balance, creator score, resolution, and thumbnail quality.</p>
+                    <ul class="empty-features-list">
+                      <li>Safe-zone preview</li>
+                      <li>Manual crop &amp; zoom</li>
+                      <li>Creator readiness report</li>
+                      <li>Multi-platform preview</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+              <div class="preview-footer-hints">
+                <span>✋ Drag preview to pan image</span>
+                <span>🔍 Wheel / slider to zoom</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- ================================================================
+               RIGHT PANEL: Analysis and Results
+               ================================================================ -->
+          <aside class="studio-panel studio-panel-right" aria-label="Analysis and Results">
+
+            <!-- Creator Readiness Report -->
+            <div aria-live="polite" class="card creator-score-card" id="creatorScoreCard">
               <div class="creator-score-top">
                 <div>
                   <span class="result-label">Technical readiness</span>
@@ -245,7 +384,7 @@
             </div>
 
             <!-- Thumbnail Quality Analyzer -->
-            <section aria-labelledby="thumbnailAnalyzerTitle" aria-live="polite" class="thumbnail-analyzer" id="thumbnailAnalyzer">
+            <section aria-labelledby="thumbnailAnalyzerTitle" aria-live="polite" class="card thumbnail-analyzer" id="thumbnailAnalyzer">
               <div class="analyzer-head">
                 <div>
                   <span class="result-label">Rule-based cover analysis</span>
@@ -267,32 +406,15 @@
               <p class="analyzer-disclaimer">This analyzer estimates pixel-level technical quality. It does not detect text, faces, emotions, or predict actual engagement.</p>
             </section>
 
-            <!-- Manual Crop Studio -->
-            <div aria-labelledby="cropStudioTitle" class="crop-studio" id="cropStudio">
-              <div class="crop-studio-header">
-                <div>
-                  <span class="result-label">Manual crop</span>
-                  <h3 id="cropStudioTitle">Position your cover</h3>
-                </div>
-                <span class="crop-zoom-value" id="zoomValue">100%</span>
-              </div>
-              <p class="small-text">Upload an image, then drag it directly inside the 9:16 preview. Use the slider or mouse wheel to zoom.</p>
-              <label class="crop-label" for="zoomRange">Zoom</label>
-              <input class="crop-range" disabled="" id="zoomRange" max="300" min="100" step="1" type="range" value="100"/>
-              <div class="crop-actions">
-                <button class="btn btn-secondary" disabled="" id="resetCropBtn" type="button">Reset Crop</button>
-                <span class="crop-hint">Drag on the Reel preview • Double-click to reset</span>
-              </div>
-              <div aria-label="Creator overlay controls" class="creator-overlay-controls">
-                <button aria-pressed="true" class="overlay-toggle active" disabled="" id="toggleThirdsBtn" type="button">Rule of Thirds</button>
-                <button aria-pressed="true" class="overlay-toggle active" disabled="" id="toggleFaceGuideBtn" type="button">Face Guide</button>
-                <button aria-pressed="true" class="overlay-toggle active" disabled="" id="toggleSnapBtn" type="button">Snap to Center</button>
-              </div>
-            </div>
-
             <!-- Platform Guidance -->
-            <div class="creator-tools-box">
-              <h3>Choose Platform</h3>
+            <div class="card creator-tools-box">
+              <div class="studio-group-header">
+                <span class="studio-group-icon" aria-hidden="true">🌐</span>
+                <div>
+                  <span class="result-label">Social Standards</span>
+                  <h3>Choose Platform</h3>
+                </div>
+              </div>
               <p class="small-text">Switch guidance for the vertical platform you are preparing the cover for.</p>
               <div class="platform-tabs">
                 <button aria-pressed="true" class="platform-btn active" data-platform="Instagram Reels" type="button">Instagram Reels</button>
@@ -304,61 +426,29 @@
               <p class="platform-cover-status" data-status="yes" id="platformCoverStatus"><span class="status-icon" id="platformCoverIcon">✅</span> <span id="platformCoverNote">Instagram Reels uses the exact cover you set when you post directly in the app.</span></p>
             </div>
 
-            <div class="share-box" hidden="" id="shareBox">
-              <h3>Preview downloaded 🎉</h3>
-              <p>Share ReelCoverFit with another creator.</p>
-              <button id="copySiteLinkBtn" type="button">Copy Website Link</button>
-            </div>
+          </aside>
 
-            <div id="workflowStatus" class="workflow-status" aria-live="polite">
-              <strong>Step 1 of 3</strong><span>Upload a Reel cover to begin.</span>
-            </div>
+        </div><!-- /studio-workspace -->
 
-            <div class="button-group">
-              <button aria-pressed="true" class="btn btn-secondary" disabled="" id="toggleSafeBtn" type="button">
-                Hide Safe Zone
-              </button>
-              <button aria-pressed="true" class="btn btn-secondary" disabled="" id="toggleGridBtn" type="button">
-                Hide Grid Preview
-              </button>
-              <button class="btn btn-primary" disabled="" id="downloadBtn" type="button">
-                Download Instagram-Ready Cover
-              </button>
-              <button class="btn btn-danger" disabled="" id="resetBtn" type="button">
-                Reset
-              </button>
-            </div>
+        <!-- ================================================================
+             SECONDARY PREVIEWS DOCK (Profile Grid & Multi-Platform Previews)
+             ================================================================ -->
+        <div class="studio-secondary-dock">
+          <div class="section-heading text-center secondary-dock-heading">
+            <p class="eyebrow">Multi-Surface Previews</p>
+            <h2>Profile Grid &amp; Multi-Platform Previews</h2>
+            <p>Ensure your subject remains centered and readable across square feeds, Explore tabs, and other vertical platforms.</p>
           </div>
 
-          <!-- Preview Canvases -->
-          <div class="preview-panel">
-            <div class="card">
-              <div class="preview-header">
-                <h3>9:16 Reel preview</h3>
-                <span class="tag">1080 × 1920</span>
-              </div>
-              <div class="canvas-wrap">
-                <canvas aria-label="Interactive Reel cover crop preview. Drag to reposition the image." height="1920" id="reelCanvas" width="1080"></canvas>
-                <div class="empty-preview" id="emptyPreview">
-                  <div class="premium-empty-state">
-                    <span aria-hidden="true" class="empty-state-icon">▣</span>
-                    <strong>Drop your Reel cover</strong>
-                    <p>We’ll check safe zones, crop balance, creator score, resolution, and thumbnail quality.</p>
-                    <ul>
-                      <li>Safe-zone preview</li>
-                      <li>Manual crop &amp; zoom</li>
-                      <li>Creator report</li>
-                      <li>Multi-platform preview</li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
-            </div>
-
+          <div class="secondary-previews-grid">
+            <!-- Profile Grid Crop Preview -->
             <div class="card grid-preview-card" id="gridPreviewCard">
               <div class="preview-header">
-                <h3>Profile grid crop preview</h3>
-                <span class="tag">1:1 center crop</span>
+                <div>
+                  <span class="result-label">Profile Feed</span>
+                  <h3>Profile Grid Crop Preview</h3>
+                </div>
+                <span class="tag">1:1 Center Crop</span>
               </div>
               <div class="grid-canvas-wrap">
                 <canvas aria-label="Profile grid crop preview canvas" height="800" id="gridCanvas" width="800"></canvas>
@@ -366,13 +456,15 @@
                   Upload an image to view grid crop
                 </div>
               </div>
+              <p class="preview-card-hint">Shows the square center thumbnail displayed on your Instagram profile grid.</p>
             </div>
 
+            <!-- Multi-Platform Synchronized Preview -->
             <div aria-labelledby="multiPreviewTitle" class="card multi-preview-card">
               <div class="preview-header">
                 <div>
-                  <span class="result-label">Synchronized crop</span>
-                  <h3 id="multiPreviewTitle">Multi-platform preview</h3>
+                  <span class="result-label">Synchronized Crop</span>
+                  <h3 id="multiPreviewTitle">Multi-Platform Preview</h3>
                 </div>
                 <span class="tag" id="surfacePreviewTag">Instagram Reel · 9:16</span>
               </div>
@@ -391,7 +483,7 @@
               <p class="surface-preview-advice" id="surfacePreviewAdvice">Your manual crop and zoom stay synchronized across every preview.</p>
             </div>
           </div>
-        </div>
+        </div><!-- /studio-secondary-dock -->
       </div>
     </section>
 
@@ -768,7 +860,7 @@
     <div class="container footer-content">
       <div>
         <a class="logo footer-logo" href="/" aria-label="ReelCoverFit home">
-          <img alt="ReelCoverFit logo" class="logo-img" src="assets/logo.svg"/>
+          <img alt="ReelCoverFit logo" class="logo-img" src="assets/logo-icon.svg"/>
           <span>ReelCoverFit</span>
         </a>
         <p>
