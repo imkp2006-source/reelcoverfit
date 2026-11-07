@@ -104,6 +104,8 @@ function getFileSizeBucket(size) {
 }
 
 function setupClickTracking() {
+  if (window.__rcfTrackingBound) return;
+  window.__rcfTrackingBound = true;
   document.querySelectorAll("[data-track]").forEach((element) => {
     element.addEventListener("click", () => {
       trackEvent(element.dataset.track, {

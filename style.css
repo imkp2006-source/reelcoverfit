@@ -1166,21 +1166,6 @@ summary:focus-visible,
   text-align: center;
 }
 
-.tool-layout {
-  display: grid;
-  gap: 28px;
-}
-
-.upload-panel {
-  padding: 26px;
-  align-self: start;
-}
-
-.upload-panel h3 {
-  margin-top: 0;
-  margin-bottom: 6px;
-}
-
 .drop-zone {
   margin-top: 18px;
   min-height: 184px;
@@ -2664,18 +2649,8 @@ details p {
 
 @media (min-width: 960px) {
   .hero-grid,
-  .tool-layout,
   .guide-grid {
     grid-template-columns: 0.92fr 1.08fr;
-  }
-
-  .tool-layout {
-    align-items: start;
-  }
-
-  .upload-panel {
-    position: sticky;
-    top: 96px;
   }
 }
 

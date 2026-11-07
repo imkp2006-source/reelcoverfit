@@ -78,8 +78,32 @@
     });
   }
 
+  /* --------------------------------------------------------------------------
+     3. Lightweight Analytics Click Tracking
+     -------------------------------------------------------------------------- */
+  function initClickTracking() {
+    if (window.__rcfTrackingBound) return;
+    window.__rcfTrackingBound = true;
+
+    document.querySelectorAll("[data-track]").forEach(function (element) {
+      element.addEventListener("click", function () {
+        var trackName = element.getAttribute("data-track");
+        if (!trackName) return;
+        if (typeof window.gtag === "function") {
+          window.gtag("event", trackName, {
+            tool_name: "reelcoverfit",
+            page_path: window.location.pathname,
+            link_text: (element.textContent || "").trim().slice(0, 80),
+            link_url: element.getAttribute("href") || ""
+          });
+        }
+      });
+    });
+  }
+
   document.addEventListener("DOMContentLoaded", function () {
     initScrollReveal();
     initMobileNav();
+    initClickTracking();
   });
 })();
